@@ -57,7 +57,7 @@ const tables = [
   ...allTables.filter((n) => !knownSet.has(n)).sort(),
 ];
 
-const BATCH_SIZE = 50; // rows per INSERT batch (D1 has statement size limits)
+const BATCH_SIZE = 10; // rows per INSERT batch (D1 has statement size limits)
 let fileIndex = 0;
 let totalRows = 0;
 const lines = [];
@@ -103,7 +103,7 @@ for (const line of lines) {
   if (currentContent.length + line.length > MAX_FILE_SIZE && currentContent.length > 100) {
     fs.writeFileSync(path.join(OUT_DIR, `seed-${String(partNum).padStart(3, "0")}.sql`), currentContent);
     partNum++;
-    currentContent = "";
+    currentContent = "PRAGMA foreign_keys = OFF;\n";
   }
   currentContent += line + "\n";
 }
