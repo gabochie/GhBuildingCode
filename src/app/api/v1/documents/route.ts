@@ -14,10 +14,10 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const projectId = url.searchParams.get("project_id");
-    const db = getDb();
+    const db = await getDb();
     const docs = projectId
-      ? db.prepare("SELECT * FROM documents WHERE user_id = ? AND project_id = ? ORDER BY created_at DESC").all(session.sub, projectId)
-      : db.prepare("SELECT * FROM documents WHERE user_id = ? ORDER BY created_at DESC").all(session.sub);
+      ? (await db.prepare("SELECT * FROM documents WHERE user_id = ? AND project_id = ? ORDER BY created_at DESC").all(session.sub, projectId))
+      : (await db.prepare("SELECT * FROM documents WHERE user_id = ? ORDER BY created_at DESC").all(session.sub));
     return ok({ documents: docs });
   } catch (e) {
     return handleError(e);
@@ -37,11 +37,11 @@ export async function POST(req: Request) {
     if (!projectId) return badRequest("project_id is required.");
     if (file.size > 15 * 1024 * 1024) return badRequest("File exceeds 15 MB limit.");
 
-    const db = getDb();
-    const project = db.prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?").get(projectId, session.sub);
+    const db = await getDb();
+    const project = await db.prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?").get(projectId, session.sub);
     if (!project) return forbidden("Project not found or not yours.");
 
-    const chk = checkLimit(session.sub, session.plan, "documents");
+    const chk = await checkLimit(session.sub, session.plan, "documents");
     if (!chk.allowed) return limitReached("documents", chk.used, chk.limit, session.plan);
 
     const allowed = new Set(["application/pdf", "text/plain", "text/markdown", "application/json", "application/octet-stream"]);
@@ -56,11 +56,11 @@ export async function POST(req: Request) {
     const buf = Buffer.from(await file.arrayBuffer());
     fs.writeFileSync(path.join(UPLOAD_DIR, storageKey), buf);
 
-    db.prepare(
+    await db.prepare(
       "INSERT INTO documents (id, project_id, user_id, filename, mime, size, storage_key, status, doc_type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'uploaded', ?, ?)"
     ).run(id, projectId, session.sub, file.name, file.type, file.size, storageKey, docType, now());
 
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'upload', 'document', ?, ?)").run(
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'upload', 'document', ?, ?)").run(
       uid("aud"), session.sub, id, JSON.stringify({ filename: file.name })
     );
 

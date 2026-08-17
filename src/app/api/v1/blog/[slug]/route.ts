@@ -22,10 +22,10 @@ const updateSchema = z.object({
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const db = getDb();
-    const post = db.prepare(
+    const db = await getDb();
+    const post = (await db.prepare(
       "SELECT * FROM blog_posts WHERE slug = ?"
-    ).get(slug) as Record<string, unknown> | undefined;
+    ).get(slug)) as Record<string, unknown> | undefined;
 
     if (!post) return notFound("Post not found.");
     return ok({ post });
@@ -44,15 +44,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
     const parsed = updateSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid post payload.");
 
-    const db = getDb();
-    const existing = db.prepare("SELECT id, slug FROM blog_posts WHERE slug = ?").get(currentSlug) as { id: string; slug: string } | undefined;
+    const db = await getDb();
+    const existing = (await db.prepare("SELECT id, slug FROM blog_posts WHERE slug = ?").get(currentSlug)) as { id: string; slug: string } | undefined;
     if (!existing) return notFound("Post not found.");
 
     const data = parsed.data;
     const newSlug = data.slug || (data.title ? slugify(data.title) : currentSlug);
 
     if (newSlug !== currentSlug) {
-      const dup = db.prepare("SELECT id FROM blog_posts WHERE slug = ? AND id != ?").get(newSlug, existing.id);
+      const dup = await db.prepare("SELECT id FROM blog_posts WHERE slug = ? AND id != ?").get(newSlug, existing.id);
       if (dup) return badRequest("A post with this slug already exists.");
     }
 
@@ -77,7 +77,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
     values.push(existing.id);
 
     if (fields.length > 1) {
-      db.prepare(`UPDATE blog_posts SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+      await db.prepare(`UPDATE blog_posts SET ${fields.join(", ")} WHERE id = ?`).run(...values);
     }
 
     return ok({ slug: newSlug });
@@ -93,8 +93,8 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ slug
 
   try {
     const { slug } = await params;
-    const db = getDb();
-    const result = db.prepare("DELETE FROM blog_posts WHERE slug = ?").run(slug);
+    const db = await getDb();
+    const result = (await db.prepare("DELETE FROM blog_posts WHERE slug = ?").run(slug)) as { changes: number };
     if (result.changes === 0) return notFound("Post not found.");
     return ok({ deleted: true });
   } catch (e) {

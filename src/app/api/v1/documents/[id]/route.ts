@@ -12,11 +12,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!session) return unauthorized();
   try {
     const { id } = await params;
-    const db = getDb();
-    const doc = db.prepare("SELECT * FROM documents WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+    const db = await getDb();
+    const doc = (await db.prepare("SELECT * FROM documents WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
     if (!doc) return notFound("Document not found");
     if (doc.user_id !== session.sub) return forbidden();
-    const pages = db.prepare("SELECT page_no, text FROM document_pages WHERE document_id = ? ORDER BY page_no LIMIT 200").all(id) as unknown[];
+    const pages = (await db.prepare("SELECT page_no, text FROM document_pages WHERE document_id = ? ORDER BY page_no LIMIT 200").all(id)) as unknown[];
     return ok({ document: doc, pages });
   } catch (e) {
     return handleError(e);
@@ -28,8 +28,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!session) return unauthorized();
   try {
     const { id } = await params;
-    const db = getDb();
-    const doc = db.prepare("SELECT * FROM documents WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+    const db = await getDb();
+    const doc = (await db.prepare("SELECT * FROM documents WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
     if (!doc) return notFound("Document not found");
     if (doc.user_id !== session.sub) return forbidden();
 
@@ -40,18 +40,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     const buf = fs.readFileSync(filePath);
     const text = await extractText(buf, String(doc.mime || ""), String(doc.filename || ""));
 
-    const tx = db.transaction(() => {
-      db.prepare("DELETE FROM document_pages WHERE document_id = ?").run(id);
-      const insPage = db.prepare("INSERT INTO document_pages (id, document_id, page_no, text) VALUES (?, ?, ?, ?)");
-      const pages = splitPages(text);
-      if (pages.length) {
-        pages.forEach((p, i) => insPage.run(uid("pg"), id, i + 1, p));
-      } else {
-        insPage.run(uid("pg"), id, 1, text);
+    await db.prepare("DELETE FROM document_pages WHERE document_id = ?").run(id);
+    const insPage = db.prepare("INSERT INTO document_pages (id, document_id, page_no, text) VALUES (?, ?, ?, ?)");
+    const pages = splitPages(text);
+    if (pages.length) {
+      for (let i = 0; i < pages.length; i++) {
+        await insPage.run(uid("pg"), id, i + 1, pages[i]);
       }
-      db.prepare("UPDATE documents SET status = 'reviewed' WHERE id = ?").run(id);
-    });
-    tx();
+    } else {
+      await insPage.run(uid("pg"), id, 1, text);
+    }
+    await db.prepare("UPDATE documents SET status = 'reviewed' WHERE id = ?").run(id);
 
     const review = preliminaryReview(text);
     return ok({

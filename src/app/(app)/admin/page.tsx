@@ -11,23 +11,23 @@ export default async function AdminPage() {
   const user = await getDbUser(session);
   if (!user || user.role !== "admin") redirect("/dashboard");
 
-  const db = getDb();
+  const db = await getDb();
   const stats = {
-    users: (db.prepare("SELECT COUNT(*) c FROM users").get() as { c: number }).c,
-    projects: (db.prepare("SELECT COUNT(*) c FROM projects").get() as { c: number }).c,
-    requirements: (db.prepare("SELECT COUNT(*) c FROM requirements").get() as { c: number }).c,
-    verified: (db.prepare("SELECT COUNT(*) c FROM requirements WHERE editorial_state = 'VERIFIED'").get() as { c: number }).c,
-    notVerified: (db.prepare("SELECT COUNT(*) c FROM requirements WHERE editorial_state != 'VERIFIED'").get() as { c: number }).c,
-    authorities: (db.prepare("SELECT COUNT(*) c FROM authorities").get() as { c: number }).c,
-    findings: (db.prepare("SELECT COUNT(*) c FROM compliance_findings WHERE severity IN ('CRITICAL','HIGH')").get() as { c: number }).c,
-    leads: (db.prepare("SELECT COUNT(*) c FROM upgrade_leads WHERE status = 'new'").get() as { c: number }).c
+    users: ((await db.prepare("SELECT COUNT(*) c FROM users").get()) as { c: number }).c,
+    projects: ((await db.prepare("SELECT COUNT(*) c FROM projects").get()) as { c: number }).c,
+    requirements: ((await db.prepare("SELECT COUNT(*) c FROM requirements").get()) as { c: number }).c,
+    verified: ((await db.prepare("SELECT COUNT(*) c FROM requirements WHERE editorial_state = 'VERIFIED'").get()) as { c: number }).c,
+    notVerified: ((await db.prepare("SELECT COUNT(*) c FROM requirements WHERE editorial_state != 'VERIFIED'").get()) as { c: number }).c,
+    authorities: ((await db.prepare("SELECT COUNT(*) c FROM authorities").get()) as { c: number }).c,
+    findings: ((await db.prepare("SELECT COUNT(*) c FROM compliance_findings WHERE severity IN ('CRITICAL','HIGH')").get()) as { c: number }).c,
+    leads: ((await db.prepare("SELECT COUNT(*) c FROM upgrade_leads WHERE status = 'new'").get()) as { c: number }).c
   };
 
-  const audit = db.prepare("SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 15").all() as Array<Record<string, unknown>>;
-  const users = db.prepare("SELECT id, email, name, role, plan, created_at FROM users ORDER BY created_at DESC").all() as Array<Record<string, unknown>>;
-  const leads = db.prepare("SELECT * FROM upgrade_leads ORDER BY created_at DESC LIMIT 20").all() as Array<Record<string, unknown>>;
-  const genLeads = db.prepare("SELECT * FROM leads ORDER BY created_at DESC LIMIT 30").all() as Array<Record<string, unknown>>;
-  const genLeadCount = (db.prepare("SELECT COUNT(*) c FROM leads WHERE status = 'new'").get() as { c: number }).c;
+  const audit = (await db.prepare("SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 15").all()) as Array<Record<string, unknown>>;
+  const users = (await db.prepare("SELECT id, email, name, role, plan, created_at FROM users ORDER BY created_at DESC").all()) as Array<Record<string, unknown>>;
+  const leads = (await db.prepare("SELECT * FROM upgrade_leads ORDER BY created_at DESC LIMIT 20").all()) as Array<Record<string, unknown>>;
+  const genLeads = (await db.prepare("SELECT * FROM leads ORDER BY created_at DESC LIMIT 30").all()) as Array<Record<string, unknown>>;
+  const genLeadCount = ((await db.prepare("SELECT COUNT(*) c FROM leads WHERE status = 'new'").get()) as { c: number }).c;
 
   return (
     <div>

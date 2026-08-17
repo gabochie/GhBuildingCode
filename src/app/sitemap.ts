@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
 
   // Static pages
@@ -30,10 +30,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Dynamic blog pages
   let blogPages: MetadataRoute.Sitemap = [];
   try {
-    const db = getDb();
-    const posts = db.prepare(
+    const db = await getDb();
+    const posts = (await db.prepare(
       "SELECT slug, updated_at FROM blog_posts WHERE status = 'published'"
-    ).all() as Array<{ slug: string; updated_at: string }>;
+    ).all()) as Array<{ slug: string; updated_at: string }>;
 
     blogPages = posts.map((post) => ({
       url: `${APP_URL}/blog/${post.slug}`,

@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest("Invalid payload. Provide topics (array), optional category, optional wordCount.");
 
     const { topics, category, wordCount } = parsed.data;
-    const db = getDb();
+    const db = await getDb();
     const results: Array<{ slug: string; title: string; status: string }> = [];
 
     for (const topic of topics) {
@@ -97,7 +97,7 @@ Focus on GS 1207:2018 compliance and practical value.`;
       }
 
       const slug = slugify(article.title);
-      const existing = db.prepare("SELECT id FROM blog_posts WHERE slug = ?").get(slug);
+      const existing = await db.prepare("SELECT id FROM blog_posts WHERE slug = ?").get(slug);
       if (existing) {
         results.push({ slug, title: article.title, status: "exists" });
         continue;
@@ -115,7 +115,7 @@ Focus on GS 1207:2018 compliance and practical value.`;
       const id = uid("post");
       const tagsJson = JSON.stringify(article.tags || []);
 
-      db.prepare(
+      await db.prepare(
         `INSERT INTO blog_posts (id, slug, title, excerpt, body, cover_image, category, tags, status, author_name, author_bio, meta_description, author_user_id, published_at, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 'draft', 'GHBC Team', 'The GHBC editorial team produces research-backed content on Ghana building regulations, construction compliance, and digital building control.', ?, NULL, ?, ?, ?)`
       ).run(id, slug, article.title, article.excerpt || null, body, category, tagsJson, article.metaDescription || article.excerpt || null, now(), now());

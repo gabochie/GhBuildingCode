@@ -37,8 +37,8 @@ function extractFaq(body: string): Array<{ q: string; a: string }> {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const db = getDb();
-  const post = db.prepare("SELECT title, excerpt, meta_description, cover_image, published_at, updated_at FROM blog_posts WHERE slug = ? AND status = 'published'").get(slug) as { title: string; excerpt: string; meta_description: string | null; cover_image: string | null; published_at: string | null; updated_at: string | null } | undefined;
+  const db = await getDb();
+  const post = (await db.prepare("SELECT title, excerpt, meta_description, cover_image, published_at, updated_at FROM blog_posts WHERE slug = ? AND status = 'published'").get(slug)) as { title: string; excerpt: string; meta_description: string | null; cover_image: string | null; published_at: string | null; updated_at: string | null } | undefined;
   if (!post) return { title: "Not Found" };
 
   const description = post.meta_description || post.excerpt || undefined;
@@ -69,8 +69,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'").get(slug) as Record<string, unknown> | undefined;
+  const db = await getDb();
+  const row = (await db.prepare("SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'").get(slug)) as Record<string, unknown> | undefined;
   if (!row) notFound();
 
   const title = String(row.title);

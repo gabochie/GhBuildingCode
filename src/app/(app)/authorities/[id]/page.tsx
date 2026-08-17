@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui
 export default async function AuthorityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
-  const db = getDb();
+  const db = await getDb();
 
-  const authority = db.prepare("SELECT * FROM authorities WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+  const authority = (await db.prepare("SELECT * FROM authorities WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
   if (!authority) notFound();
 
-  const checklist = db.prepare("SELECT * FROM authority_checklists WHERE authority_id = ? ORDER BY category, item ASC").all(id) as Array<Record<string, unknown>>;
+  const checklist = (await db.prepare("SELECT * FROM authority_checklists WHERE authority_id = ? ORDER BY category, item ASC").all(id)) as Array<Record<string, unknown>>;
 
   const byCategory = new Map<string, Array<Record<string, unknown>>>();
   for (const item of checklist) {

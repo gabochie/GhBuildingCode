@@ -22,10 +22,10 @@ export async function GET(req: Request) {
     const types = type ? type.split(",").map((t) => t.trim()).filter(Boolean) : null;
     const q = query || occupancy || "";
 
-    const db = getDb();
+    const db = await getDb();
     let rows;
     if (q) {
-      rows = searchRequirements({
+      rows = await searchRequirements({
         query: q,
         part: part ?? null,
         types,
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
       if (verified_only) { sql += " AND editorial_state = 'VERIFIED'"; }
       sql += " ORDER BY confidence DESC LIMIT ?";
       params.push(limit);
-      rows = db.prepare(sql).all(...params);
+      rows = await db.prepare(sql).all(...params);
     }
 
     return ok({ requirements: rows, count: rows.length });

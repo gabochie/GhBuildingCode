@@ -29,14 +29,14 @@ function callerPhone(formData: FormData): string {
 export async function POST(req: Request) {
   const form = await req.formData();
   const action = (form.get("action") as string) || "ask";
-  const db = getDb();
+  const db = await getDb();
   const phone = callerPhone(form);
   const csid = callSid(form);
 
   if (action === "lead_name") {
     const name = speechResult(form);
     const leadId = uid("lead");
-    db.prepare(
+    await db.prepare(
       `INSERT INTO leads (id, name, email, phone, source, channel, voice_session_id, status)
        VALUES (?, ?, '', ?, 'voice_phone', 'phone', ?, 'new')`
     ).run(leadId, name || "Unknown", phone || null, csid);
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const leadId = form.get("lead_id") as string;
     const name = form.get("name") as string;
     if (leadId) {
-      db.prepare("UPDATE leads SET email = ? WHERE id = ?").run(email, leadId);
+      await db.prepare("UPDATE leads SET email = ? WHERE id = ?").run(email, leadId);
     }
     const url = new URL(req.url);
     url.searchParams.set("action", "lead_phone");
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const name = form.get("name") as string;
     const email = form.get("email") as string;
     if (leadId && phoneInput.toLowerCase() !== "skip") {
-      db.prepare("UPDATE leads SET phone = ? WHERE id = ?").run(phoneInput, leadId);
+      await db.prepare("UPDATE leads SET phone = ? WHERE id = ?").run(phoneInput, leadId);
     }
     return leadCaptureConfirm(name || "there", email || "");
   }

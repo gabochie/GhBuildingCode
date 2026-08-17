@@ -35,13 +35,8 @@ export interface SearchOptions {
   verifiedOnly?: boolean;
 }
 
-/**
- * Layer 2 — Retrieval. Deterministic hybrid search over the clause-anchored
- * corpus: FTS5 keyword ranking + metadata filters (part, requirement type,
- * editorial state). Embedding-ready interface.
- */
-export function searchRequirements(opts: SearchOptions): RetrievedRequirement[] {
-  const db = getDb();
+export async function searchRequirements(opts: SearchOptions): Promise<RetrievedRequirement[]> {
+  const db = await getDb();
   const limit = opts.limit || 12;
   const q = (opts.query || "").trim();
   const terms = tokenize(q);
@@ -49,9 +44,8 @@ export function searchRequirements(opts: SearchOptions): RetrievedRequirement[] 
   if (!q || !terms.length) {
     let sql = `
       SELECT r.*, c.page_start as page,
-             bm25(requirements_fts) * -1 AS score
+             0 AS score
       FROM requirements r
-      LEFT JOIN requirements_fts fts ON fts.rowid = r.rowid
       LEFT JOIN clauses c ON c.id = r.clause_id
       WHERE 1=1`;
     const params: unknown[] = [];
@@ -68,49 +62,66 @@ export function searchRequirements(opts: SearchOptions): RetrievedRequirement[] 
     }
     sql += " ORDER BY r.confidence DESC LIMIT ?";
     params.push(limit);
-    return (db.prepare(sql).all(...params) as RetrievedRequirement[]).map((r) => ({
+    return ((await db.prepare(sql).all(...params)) as unknown as RetrievedRequirement[]).map((r) => ({
       ...r,
       score: r.score ?? 0
     }));
   }
 
-  // NOTE: requirements_fts is contentless; we maintain rowid parity by inserting
-  // rows in the same order as requirements. FTS queries join back on rowid.
-  const ftsQuery = terms.map((t) => `"${t}"`).join(" OR ");
-  const sql = `
-    SELECT r.*, c.page_start as page, bm25(requirements_fts) * -1 AS score
-    FROM requirements_fts fts
-    JOIN requirements r ON r.rowid = fts.rowid
+  const likeClauses: string[] = [];
+  const likeParams: unknown[] = [];
+  for (const t of terms) {
+    const pattern = `%${t}%`;
+    likeClauses.push("(r.subject LIKE ? OR r.action LIKE ? OR r.source_text LIKE ?)");
+    likeParams.push(pattern, pattern, pattern);
+  }
+
+  let sql = `
+    SELECT r.*, c.page_start as page, 1.0 AS score
+    FROM requirements r
     LEFT JOIN clauses c ON c.id = r.clause_id
-    WHERE requirements_fts MATCH ?
-      ${opts.part ? "AND r.part = ?" : ""}
-      ${opts.types?.length ? `AND r.requirement_type IN (${opts.types.map(() => "?").join(",")})` : ""}
-      ${opts.verifiedOnly ? "AND r.editorial_state = 'VERIFIED'" : ""}
-    ORDER BY score DESC LIMIT ?`;
-  const params: unknown[] = [ftsQuery];
-  if (opts.part) params.push(opts.part);
-  if (opts.types?.length) params.push(...opts.types);
+    WHERE (${likeClauses.join(" AND ")})`;
+  const params: unknown[] = [...likeParams];
+  if (opts.part) {
+    sql += " AND r.part = ?";
+    params.push(opts.part);
+  }
+  if (opts.types?.length) {
+    sql += ` AND r.requirement_type IN (${opts.types.map(() => "?").join(",")})`;
+    params.push(...opts.types);
+  }
+  if (opts.verifiedOnly) {
+    sql += " AND r.editorial_state = 'VERIFIED'";
+  }
+  sql += " ORDER BY r.confidence DESC LIMIT ?";
   params.push(limit);
-  return db.prepare(sql).all(...params) as RetrievedRequirement[];
+  return (await db.prepare(sql).all(...params)) as unknown as RetrievedRequirement[];
 }
 
-export function searchChunks(query: string, opts: { part?: number; limit?: number } = {}): RetrievedChunk[] {
-  const db = getDb();
+export async function searchChunks(query: string, opts: { part?: number; limit?: number } = {}): Promise<RetrievedChunk[]> {
+  const db = await getDb();
   const limit = opts.limit || 8;
   const terms = tokenize(query);
   if (!terms.length) return [];
-  const ftsQuery = terms.map((t) => `"${t}"`).join(" OR ");
+
+  const likeClauses: string[] = [];
+  const likeParams: unknown[] = [];
+  for (const t of terms) {
+    const pattern = `%${t}%`;
+    likeClauses.push("(c.text LIKE ? OR c.title LIKE ?)");
+    likeParams.push(pattern, pattern);
+  }
+
   const sql = `
-    SELECT c.*, bm25(chunks_fts) * -1 AS score
-    FROM chunks_fts fts
-    JOIN chunks c ON c.rowid = fts.rowid
-    WHERE chunks_fts MATCH ?
+    SELECT c.*, 1.0 AS score
+    FROM chunks c
+    WHERE ${likeClauses.join(" AND ")}
       ${opts.part ? "AND c.part = ?" : ""}
-    ORDER BY score DESC LIMIT ?`;
-  const params: unknown[] = [ftsQuery];
+    ORDER BY c.rowid LIMIT ?`;
+  const params: unknown[] = [...likeParams];
   if (opts.part) params.push(opts.part);
   params.push(limit);
-  return (db.prepare(sql).all(...params) as Array<Record<string, unknown>>).map((row) => ({
+  return ((await db.prepare(sql).all(...params)) as Array<Record<string, unknown>>).map((row) => ({
     chunk_id: row.chunk_id as string,
     clause_id: row.clause_id as string,
     text: row.text as string,
@@ -124,17 +135,25 @@ export function searchChunks(query: string, opts: { part?: number; limit?: numbe
   }));
 }
 
-export function searchDefinitions(term: string): Array<{ term: string; definition: string; page: number }> {
-  const db = getDb();
+export async function searchDefinitions(term: string): Promise<Array<{ term: string; definition: string; page: number }>> {
+  const db = await getDb();
   const t = tokenize(term);
   if (!t.length) return [];
+
+  const likeClauses: string[] = [];
+  const likeParams: unknown[] = [];
+  for (const x of t) {
+    const pattern = `%${x}%`;
+    likeClauses.push("d.term LIKE ? OR d.definition LIKE ?");
+    likeParams.push(pattern, pattern);
+  }
+
   const sql = `
     SELECT d.term, d.definition, d.page
-    FROM definitions_fts fts
-    JOIN definitions d ON d.rowid = fts.rowid
-    WHERE definitions_fts MATCH ?
-    ORDER BY bm25(definitions_fts) ASC LIMIT 8`;
-  return db.prepare(sql).all(t.map((x) => `"${x}"`).join(" OR ")) as Array<{
+    FROM definitions d
+    WHERE ${likeClauses.join(" AND ")}
+    ORDER BY d.rowid LIMIT 8`;
+  return (await db.prepare(sql).all(...likeParams)) as Array<{
     term: string;
     definition: string;
     page: number;

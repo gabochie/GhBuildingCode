@@ -19,7 +19,14 @@ export async function extractText(buffer: Buffer, mime: string, filename: string
   const lower = filename.toLowerCase();
   if (lower.endsWith(".pdf") || mime === "application/pdf") {
     try {
-      const pdfParse = (await import("pdf-parse")).default;
+      let pdfParse: ((buf: Buffer) => Promise<{ text?: string }>) | undefined;
+      try {
+        pdfParse = (await import("pdf-parse")).default;
+      } catch {
+        throw new Error(
+          "PDF parsing library is not available. PDF text extraction is not supported in this environment."
+        );
+      }
       const result = await pdfParse(buffer);
       return result?.text ?? "";
     } catch (e) {

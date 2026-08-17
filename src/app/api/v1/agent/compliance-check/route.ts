@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       special_conditions: p.special_conditions ?? []
     };
     const engine = evaluateRules(profile, RULE_LIBRARY);
-    const retrieved = searchRequirements({ query: occupancyGroups(p.occupancy).join(" "), limit: 12 });
+    const retrieved = await searchRequirements({ query: occupancyGroups(p.occupancy).join(" "), limit: 12 });
 
     const data = {
       status: engine.findings.some((f) => f.severity === "CRITICAL") ? "action_required" : "review_required",

@@ -20,9 +20,9 @@ export async function POST(req: Request) {
     const planId = parsed.data.plan.toLowerCase();
     if (!PLANS[planId]) return badRequest("Unknown plan.");
 
-    const db = getDb();
+    const db = await getDb();
     const id = uid("lead");
-    db.prepare(
+    await db.prepare(
       "INSERT INTO upgrade_leads (id, user_id, email, name, organization, phone, requested_plan, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)"
     ).run(
       id,
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       now()
     );
 
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'request_upgrade', 'upgrade_lead', ?, ?)").run(
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'request_upgrade', 'upgrade_lead', ?, ?)").run(
       uid("aud"), session.sub, id, JSON.stringify({ plan: planId })
     );
 

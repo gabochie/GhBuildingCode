@@ -6,10 +6,10 @@ export async function GET() {
   const session = await getSession();
   if (!session) return unauthorized();
   try {
-    const db = getDb();
-    const conversations = db
+    const db = await getDb();
+    const conversations = (await db
       .prepare("SELECT * FROM ai_conversations WHERE user_id = ? ORDER BY created_at DESC LIMIT 50")
-      .all(session.sub) as unknown[];
+      .all(session.sub)) as unknown[];
     return ok({ conversations });
   } catch (e) {
     return handleError(e);

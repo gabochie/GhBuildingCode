@@ -7,10 +7,10 @@ import { Plus, ArrowRight } from "lucide-react";
 
 export default async function ProjectsPage() {
   const session = await getSession();
-  const db = getDb();
-  const projects = db
+  const db = await getDb();
+  const projects = (await db
     .prepare("SELECT * FROM projects WHERE user_id = ? ORDER BY updated_at DESC")
-    .all(session!.sub) as Array<Record<string, unknown>>;
+    .all(session!.sub)) as Array<Record<string, unknown>>;
 
   const scoreTone = (s: number | null) => {
     if (s == null) return "default";

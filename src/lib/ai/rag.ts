@@ -72,13 +72,13 @@ function scoreConfidence(requirements: RetrievedRequirement[], usedAi: boolean):
 }
 
 export async function answerQuestion(question: string, ctx: RagContext = {}): Promise<RagAnswer> {
-  const requirements = searchRequirements({
+  const requirements = await searchRequirements({
     query: question,
     part: ctx.part ?? null,
     limit: 8
   });
-  const chunks = searchChunks(question, { part: ctx.part ?? undefined, limit: 5 });
-  const defs = searchDefinitions(question);
+  const chunks = await searchChunks(question, { part: ctx.part ?? undefined, limit: 5 });
+  const defs = await searchDefinitions(question);
 
   const citations = buildCitations(requirements);
   const usedAi = aiConfigured();

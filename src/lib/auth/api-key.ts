@@ -18,13 +18,13 @@ export async function authenticateAgent(req: Request) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token || !isApiKeyFormat(token)) return null;
-  const db = getDb();
+  const db = await getDb();
   const keyHash = hashKey(token);
-  const row = db.prepare("SELECT * FROM api_keys WHERE key_hash = ? AND status = 'active'").get(keyHash) as
+  const row = (await db.prepare("SELECT * FROM api_keys WHERE key_hash = ? AND status = 'active'").get(keyHash)) as
     | Record<string, unknown>
     | undefined;
   if (!row) return null;
-  db.prepare("UPDATE api_keys SET last_used_at = ? WHERE id = ?").run(now(), row.id);
+  await db.prepare("UPDATE api_keys SET last_used_at = ? WHERE id = ?").run(now(), row.id);
   return row;
 }
 
@@ -37,8 +37,8 @@ export async function logUsage(opts: {
   latencyMs: number;
   requestId: string;
 }) {
-  const db = getDb();
-  db.prepare(
+  const db = await getDb();
+  await db.prepare(
     "INSERT INTO usage_events (id, api_key_id, user_id, endpoint, method, status_code, latency_ms, request_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   ).run(
     uid("use"), opts.apiKeyId ?? null, opts.userId ?? null, opts.endpoint, opts.method,

@@ -7,10 +7,10 @@ import { FileDown, FileText } from "lucide-react";
 
 export default async function ReportsPage() {
   const session = await getSession();
-  const db = getDb();
-  const projects = db
+  const db = await getDb();
+  const projects = (await db
     .prepare("SELECT id, name, readiness_score, status, updated_at FROM projects WHERE user_id = ? ORDER BY updated_at DESC")
-    .all(session!.sub) as Array<Record<string, unknown>>;
+    .all(session!.sub)) as Array<Record<string, unknown>>;
 
   return (
     <div>
