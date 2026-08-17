@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { getSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui";
 import { Landmark } from "lucide-react";
 
 export default async function AuthoritiesPage() {
-  const session = await getSession();
   const db = await getDb();
 
   const authorities = (await db
@@ -17,7 +15,7 @@ export default async function AuthoritiesPage() {
     .all()) as Array<Record<string, unknown>>;
 
   return (
-    <div>
+    <div className="container mx-auto max-w-6xl px-4 py-10">
       <PageHeader
         title="Reviewing Authorities"
         description="The agencies involved in building approval, permits and inspections in Ghana."

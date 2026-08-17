@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui";
 
 export default async function AuthorityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
   const db = await getDb();
 
   const authority = (await db.prepare("SELECT * FROM authorities WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
@@ -23,7 +21,7 @@ export default async function AuthorityDetailPage({ params }: { params: Promise<
   }
 
   return (
-    <div>
+    <div className="container mx-auto max-w-4xl px-4 py-10">
       <PageHeader
         title={String(authority.name)}
         description={String(authority.notes ?? "")}

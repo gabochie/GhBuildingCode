@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const parsed = schema.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return badRequest("Invalid query parameters.");
-    const results = searchDefinitions(parsed.data.term);
+    const results = await searchDefinitions(parsed.data.term);
     return ok({ definitions: results });
   } catch (e) {
     return handleError(e);
