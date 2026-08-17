@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ghbc-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - AUTH_SECRET=${AUTH_SECRET:-change-me-in-production}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_MODEL=${AI_MODEL:-gemini-2.0-flash}
+      - AI_FALLBACK_API_KEY=${AI_FALLBACK_API_KEY:-}
+      - AI_FALLBACK_BASE_URL=${AI_FALLBACK_BASE_URL:-https://openrouter.ai/api/v1}
+      - AI_FALLBACK_MODEL=${AI_FALLBACK_MODEL:-openai/gpt-4o-mini}
+      - BREVO_API_KEY=${BREVO_API_KEY:-}
+      - BREVO_SENDER_EMAIL=${BREVO_SENDER_EMAIL:-noreply@ghbc.gabochie.com}
+      - BREVO_SENDER_NAME=${BREVO_SENDER_NAME:-GHBC}
+    restart: unless-stopped
+
+volumes:
+  ghbc-data:

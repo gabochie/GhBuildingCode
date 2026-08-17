@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          AUTH_SECRET: ci-test-secret-1234567890
+          AI_API_KEY: ""
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ghbc:${{ github.sha }} .
+
+      - name: Smoke test container
+        run: |
+          docker run -d --name ghbc-test \
+            -e AUTH_SECRET=ci-test-secret-1234567890 \
+            -e NODE_ENV=production \
+            -p 3000:3000 \
+            ghbc:${{ github.sha }}
+          sleep 10
+          curl -sf http://localhost:3000 > /dev/null || (docker logs ghbc-test && exit 1)
+          docker stop ghbc-test
