@@ -7,16 +7,16 @@ import { CodeSearch } from "@/components/code-search";
 
 export default async function CodeExplorerPage() {
   const session = await getSession();
-  const db = getDb();
+  const db = await getDb();
 
-  const parts = db
+  const parts = (await db
     .prepare(
       `SELECT p.*,
         (SELECT COUNT(*) FROM sections s WHERE s.part_id = p.id) AS section_count,
         (SELECT COUNT(*) FROM clauses c JOIN sections s ON c.section_id = s.id WHERE s.part_id = p.id) AS clause_count
        FROM parts p ORDER BY p.part_no ASC`
     )
-    .all() as Array<Record<string, unknown>>;
+    .all()) as Array<Record<string, unknown>>;
 
   return (
     <div>

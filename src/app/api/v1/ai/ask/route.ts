@@ -20,23 +20,23 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest("Invalid question payload.");
     const { question, project_id, conversation_id, part } = parsed.data;
 
-    const db = getDb();
-    const chk = checkLimit(session.sub, session.plan, "aiQuestionsPerMonth");
+    const db = await getDb();
+    const chk = await checkLimit(session.sub, session.plan, "aiQuestionsPerMonth");
     if (!chk.allowed) return limitReached("AI questions", chk.used, chk.limit, session.plan);
     let convId = conversation_id;
     if (!convId) {
       convId = uid("conv");
-      db.prepare("INSERT INTO ai_conversations (id, user_id, project_id, title, created_at) VALUES (?, ?, ?, ?, ?)").run(
+      await db.prepare("INSERT INTO ai_conversations (id, user_id, project_id, title, created_at) VALUES (?, ?, ?, ?, ?)").run(
         convId, session.sub, project_id ?? null, question.slice(0, 80), now()
       );
     }
 
-    db.prepare("INSERT INTO ai_messages (id, conversation_id, role, content, created_at) VALUES (?, ?, 'user', ?, ?)").run(
+    await db.prepare("INSERT INTO ai_messages (id, conversation_id, role, content, created_at) VALUES (?, ?, 'user', ?, ?)").run(
       uid("msg"), convId, question, now()
     );
 
     const projectCtx = project_id
-      ? (db.prepare("SELECT id, name, occupancy, floors, building_height, floor_area, location_assembly, project_type FROM projects WHERE id = ? AND user_id = ?").get(project_id, session.sub) as Record<string, unknown> | undefined)
+      ? ((await db.prepare("SELECT id, name, occupancy, floors, building_height, floor_area, location_assembly, project_type FROM projects WHERE id = ? AND user_id = ?").get(project_id, session.sub)) as Record<string, unknown> | undefined)
       : undefined;
 
     const answer = await answerQuestion(question, {
@@ -56,19 +56,19 @@ export async function POST(req: Request) {
     });
 
     const assistantMsgId = uid("msg");
-    db.prepare(
+    await db.prepare(
       "INSERT INTO ai_messages (id, conversation_id, role, content, citations_json, confidence, safety_flag, created_at) VALUES (?, ?, 'assistant', ?, ?, ?, ?, ?)"
     ).run(assistantMsgId, convId, answer.content, JSON.stringify(answer.citations), answer.confidence, answer.safety_flag, now());
 
     for (const c of answer.citations) {
-      db.prepare(
+      await db.prepare(
         "INSERT INTO source_citations (id, message_id, requirement_id, clause_id, source_document, part, section, clause, page, snippet, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
       ).run(
         uid("cite"), assistantMsgId, c.requirement_id, null, c.source_document, c.part, c.section, c.clause, c.page, c.snippet, c.status
       );
     }
 
-    incrementUsage(session.sub, "ai_questions");
+    await incrementUsage(session.sub, "ai_questions");
 
     return ok({
       answer: answer.content,

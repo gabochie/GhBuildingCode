@@ -17,10 +17,10 @@ export async function POST(req: Request) {
     const pwError = validatePasswordStrength(password);
     if (pwError) return badRequest(pwError);
 
-    const db = getDb();
-    const row = db.prepare(
+    const db = await getDb();
+    const row = (await db.prepare(
       "SELECT id, user_id, expires_at, used FROM password_resets WHERE token = ?"
-    ).get(token) as { id: string; user_id: string; expires_at: string; used: number } | undefined;
+    ).get(token)) as { id: string; user_id: string; expires_at: string; used: number } | undefined;
 
     if (!row) return badRequest("Invalid or expired reset link.");
     if (row.used) return badRequest("This reset link has already been used.");
@@ -28,12 +28,8 @@ export async function POST(req: Request) {
 
     const hash = await hashPassword(password);
 
-    // Update password and invalidate token in a transaction
-    const tx = db.transaction(() => {
-      db.prepare("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?").run(hash, now(), row.user_id);
-      db.prepare("UPDATE password_resets SET used = 1 WHERE id = ?").run(row.id);
-    });
-    tx();
+    await db.prepare("UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?").run(hash, now(), row.user_id);
+    await db.prepare("UPDATE password_resets SET used = 1 WHERE id = ?").run(row.id);
 
     return ok({ message: "Your password has been reset. You can now sign in." });
   } catch (e) {

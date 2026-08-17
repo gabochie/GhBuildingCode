@@ -9,8 +9,8 @@ export async function POST(req: Request) {
 
   if (callSid) {
     try {
-      const db = getDb();
-      db.prepare(
+      const db = await getDb();
+      await db.prepare(
         "INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, NULL, 'voice_call', 'call', ?, ?)"
       ).run(uid("aud"), callSid, JSON.stringify({ status, duration: duration ?? null, ended_at: now() }));
     } catch {

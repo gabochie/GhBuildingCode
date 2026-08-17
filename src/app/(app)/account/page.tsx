@@ -18,7 +18,7 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
 
   const plan = getPlan(user.plan);
-  const usage = getUsage(user.id);
+  const usage = await getUsage(user.id);
   const L = plan.limits;
 
   const rows: Array<{ label: string; used: number; limit: number }> = [

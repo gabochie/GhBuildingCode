@@ -3,10 +3,10 @@ import { getDb } from "@/lib/db";
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
 export async function GET() {
-  const db = getDb();
-  const posts = db.prepare(
+  const db = await getDb();
+  const posts = (await db.prepare(
     "SELECT slug, title, excerpt, body, author_name, published_at, updated_at FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 20"
-  ).all() as Array<{
+  ).all()) as Array<{
     slug: string; title: string; excerpt: string | null;
     body: string; author_name: string; published_at: string | null; updated_at: string | null;
   }>;

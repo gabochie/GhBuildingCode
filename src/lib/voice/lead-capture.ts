@@ -14,11 +14,11 @@ export interface LeadInput {
   voice_session_id?: string;
 }
 
-export function saveLead(input: LeadInput): { id: string } {
+export async function saveLead(input: LeadInput): Promise<{ id: string }> {
   if (!validateEmail(input.email)) throw new Error("Invalid email address.");
   const id = uid("lead");
-  const db = getDb();
-  db.prepare(
+  const db = await getDb();
+  await db.prepare(
     `INSERT INTO leads (id, user_id, name, email, phone, organization, source, channel, interest, message, voice_session_id)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(

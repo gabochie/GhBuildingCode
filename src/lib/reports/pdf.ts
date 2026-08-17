@@ -137,10 +137,10 @@ class PdfBuilder {
 }
 
 export async function generateCompliancePdf(projectId: string, userId: string): Promise<Buffer> {
-  const db = getDb();
-  const project = db
+  const db = await getDb();
+  const project = (await db
     .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
-    .get(projectId, userId) as Record<string, unknown> | undefined;
+    .get(projectId, userId)) as Record<string, unknown> | undefined;
   if (!project) throw new Error("NOT_FOUND");
 
   const result = await runComplianceCheck(project);

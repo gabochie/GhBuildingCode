@@ -14,10 +14,10 @@ export async function GET() {
   const session = await getSession();
   if (!session) return unauthorized();
   try {
-    const db = getDb();
-    const keys = db
+    const db = await getDb();
+    const keys = (await db
       .prepare("SELECT id, name, scopes_json, status, last_used_at, created_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC")
-      .all(session.sub) as unknown[];
+      .all(session.sub)) as unknown[];
     return ok({ keys });
   } catch (e) {
     return handleError(e);
@@ -30,12 +30,12 @@ export async function POST(req: Request) {
   try {
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid API key payload.");
-    const db = getDb();
-    const chk = checkLimit(session.sub, session.plan, "apiKeys");
+    const db = await getDb();
+    const chk = await checkLimit(session.sub, session.plan, "apiKeys");
     if (!chk.allowed) return limitReached("api keys", chk.used, chk.limit, session.plan);
 
     const { key, keyHash } = generateApiKey(parsed.data.name);
-    db.prepare("INSERT INTO api_keys (id, user_id, name, key_hash, scopes_json, status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)").run(
+    await db.prepare("INSERT INTO api_keys (id, user_id, name, key_hash, scopes_json, status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)").run(
       `ak-${Date.now().toString(36)}`, session.sub, parsed.data.name, keyHash, JSON.stringify(parsed.data.scopes), now()
     );
     return created({

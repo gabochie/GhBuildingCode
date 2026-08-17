@@ -19,14 +19,14 @@ export async function POST(req: Request) {
     const planId = parsed.data.plan.toLowerCase();
     if (!PLANS[planId]) return badRequest("Unknown plan.");
 
-    const db = getDb();
-    const user = db.prepare("SELECT id, email, name FROM users WHERE id = ?").get(parsed.data.user_id) as
+    const db = await getDb();
+    const user = (await db.prepare("SELECT id, email, name FROM users WHERE id = ?").get(parsed.data.user_id)) as
       | { id: string; email: string; name: string }
       | undefined;
     if (!user) return badRequest("User not found.");
 
-    db.prepare("UPDATE users SET plan = ?, updated_at = ? WHERE id = ?").run(planId, now(), user.id);
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'set_plan', 'user', ?, ?)").run(
+    await db.prepare("UPDATE users SET plan = ?, updated_at = ? WHERE id = ?").run(planId, now(), user.id);
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'set_plan', 'user', ?, ?)").run(
       uid("aud"), session.sub, user.id, JSON.stringify({ plan: planId })
     );
 

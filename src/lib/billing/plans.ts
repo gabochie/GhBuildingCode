@@ -145,18 +145,18 @@ export interface UsageCounts {
   reports: number;
 }
 
-export function getUsage(userId: string): UsageCounts {
-  const db = getDb();
+export async function getUsage(userId: string): Promise<UsageCounts> {
+  const db = await getDb();
   const period = monthlyPeriod();
-  const monthly = (feature: string): number =>
-    (db.prepare("SELECT COALESCE(SUM(count), 0) c FROM feature_usage WHERE user_id = ? AND feature = ? AND period = ?").get(userId, feature, period) as { c: number }).c;
+  const monthly = async (feature: string): Promise<number> =>
+    ((await db.prepare("SELECT COALESCE(SUM(count), 0) c FROM feature_usage WHERE user_id = ? AND feature = ? AND period = ?").get(userId, feature, period)) as { c: number }).c;
   return {
-    projects: (db.prepare("SELECT COUNT(*) c FROM projects WHERE user_id = ?").get(userId) as { c: number }).c,
-    documents: (db.prepare("SELECT COUNT(*) c FROM documents WHERE user_id = ?").get(userId) as { c: number }).c,
-    apiKeys: (db.prepare("SELECT COUNT(*) c FROM api_keys WHERE user_id = ?").get(userId) as { c: number }).c,
-    aiQuestions: monthly("ai_questions"),
-    complianceChecks: monthly("compliance_checks"),
-    reports: monthly("reports")
+    projects: ((await db.prepare("SELECT COUNT(*) c FROM projects WHERE user_id = ?").get(userId)) as { c: number }).c,
+    documents: ((await db.prepare("SELECT COUNT(*) c FROM documents WHERE user_id = ?").get(userId)) as { c: number }).c,
+    apiKeys: ((await db.prepare("SELECT COUNT(*) c FROM api_keys WHERE user_id = ?").get(userId)) as { c: number }).c,
+    aiQuestions: await monthly("ai_questions"),
+    complianceChecks: await monthly("compliance_checks"),
+    reports: await monthly("reports")
   };
 }
 
@@ -177,16 +177,17 @@ export interface LimitCheck {
   plan: Plan;
 }
 
-export function checkLimit(userId: string, planId: string, feature: FeatureKey): LimitCheck {
+export async function checkLimit(userId: string, planId: string, feature: FeatureKey): Promise<LimitCheck> {
   const plan = getPlan(planId);
-  const used = getUsage(userId)[USAGE_FIELD[feature]];
+  const usage = await getUsage(userId);
+  const used = usage[USAGE_FIELD[feature]];
   const limit = plan.limits[feature];
   return { allowed: used < limit, feature, used, limit, plan };
 }
 
-export function incrementUsage(userId: string, feature: string, period: string = monthlyPeriod()): void {
-  const db = getDb();
-  db.prepare(
+export async function incrementUsage(userId: string, feature: string, period: string = monthlyPeriod()): Promise<void> {
+  const db = await getDb();
+  await db.prepare(
     `INSERT INTO feature_usage (user_id, feature, period, count, updated_at) VALUES (?, ?, ?, 1, ?)
      ON CONFLICT(user_id, feature, period) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at`
   ).run(userId, feature, period, now());

@@ -17,10 +17,10 @@ export async function POST(req: Request) {
     const { email, password } = parsed.data;
     const normalized = email.trim().toLowerCase();
 
-    const db = getDb();
-    const user = db
+    const db = await getDb();
+    const user = (await db
       .prepare("SELECT id, email, name, password_hash, role, plan FROM users WHERE email = ?")
-      .get(normalized) as
+      .get(normalized)) as
       | { id: string; email: string; name: string; password_hash: string; role: string; plan: string }
       | undefined;
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return unauthorized("Invalid email or password.");
     }
 
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'login', 'user', ?, ?)").run(
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'login', 'user', ?, ?)").run(
       uid("aud"),
       user.id,
       user.id,

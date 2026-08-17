@@ -16,8 +16,8 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest("Please provide a valid email address.");
 
     const email = parsed.data.email.trim().toLowerCase();
-    const db = getDb();
-    const user = db.prepare("SELECT id FROM users WHERE email = ?").get(email) as { id: string } | undefined;
+    const db = await getDb();
+    const user = (await db.prepare("SELECT id FROM users WHERE email = ?").get(email)) as { id: string } | undefined;
 
     // Always return success to prevent email enumeration
     if (!user) {
@@ -25,14 +25,14 @@ export async function POST(req: Request) {
     }
 
     // Invalidate any existing unused tokens for this user
-    db.prepare("UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0").run(user.id);
+    await db.prepare("UPDATE password_resets SET used = 1 WHERE user_id = ? AND used = 0").run(user.id);
 
     // Create new token (expires in 1 hour)
     const token = generateToken();
     const id = uid("rst");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    db.prepare(
+    await db.prepare(
       "INSERT INTO password_resets (id, user_id, token, expires_at, used) VALUES (?, ?, ?, ?, 0)"
     ).run(id, user.id, token, expiresAt);
 

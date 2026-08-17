@@ -8,18 +8,18 @@ import { Badge } from "@/components/ui";
 export default async function PartDetailPage({ params }: { params: Promise<{ partNo: string }> }) {
   const { partNo } = await params;
   const session = await getSession();
-  const db = getDb();
+  const db = await getDb();
 
-  const part = db.prepare("SELECT * FROM parts WHERE part_no = ?").get(partNo) as Record<string, unknown> | undefined;
+  const part = (await db.prepare("SELECT * FROM parts WHERE part_no = ?").get(partNo)) as Record<string, unknown> | undefined;
   if (!part) notFound();
 
-  const sections = db.prepare("SELECT * FROM sections WHERE part_id = ? ORDER BY section_no ASC").all(part.id) as Array<Record<string, unknown>>;
-  const clauses = db
+  const sections = (await db.prepare("SELECT * FROM sections WHERE part_id = ? ORDER BY section_no ASC").all(part.id)) as Array<Record<string, unknown>>;
+  const clauses = (await db
     .prepare(
       `SELECT c.*, s.section_no FROM clauses c JOIN sections s ON c.section_id = s.id
        WHERE s.part_id = ? ORDER BY s.section_no ASC, c.clause_no ASC`
     )
-    .all(part.id) as Array<Record<string, unknown>>;
+    .all(part.id)) as Array<Record<string, unknown>>;
 
   const bySection = new Map<string | null, Array<Record<string, unknown>>>();
   for (const c of clauses) {

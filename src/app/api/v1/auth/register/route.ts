@@ -23,19 +23,19 @@ export async function POST(req: Request) {
     const pwError = validatePasswordStrength(password);
     if (pwError) return badRequest(pwError);
 
-    const db = getDb();
-    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
+    const db = await getDb();
+    const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
     if (existing) return badRequest("An account with this email already exists.");
 
     const id = uid("usr");
     const hash = await hashPassword(password);
-    db.prepare("INSERT INTO users (id, email, password_hash, name, role, plan) VALUES (?, ?, ?, ?, 'user', 'free')").run(
+    await db.prepare("INSERT INTO users (id, email, password_hash, name, role, plan) VALUES (?, ?, ?, ?, 'user', 'free')").run(
       id,
       normalized,
       hash,
       name.trim()
     );
-    db.prepare(
+    await db.prepare(
       "INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'register', 'user', ?, ?)"
     ).run(uid("aud"), id, id, JSON.stringify({ email: normalized }));
 

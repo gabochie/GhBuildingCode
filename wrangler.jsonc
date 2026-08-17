@@ -1,0 +1,39 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "ghbc",
+	"compatibility_date": "2026-08-17",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "ghbc"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ghbc",
+			"database_id": "d3d18a56-3685-49b3-ac33-90660142ce1e"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "ghbc.gabochie.com",
+			"custom_domain": true
+		}
+	],
+	"vars": {
+		"APP_URL": "https://ghbc.gabochie.com"
+	}
+}

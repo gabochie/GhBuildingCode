@@ -29,20 +29,20 @@ const STATUS_TONE: Record<string, "destructive" | "warning" | "info" | "success"
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
-  const db = getDb();
-  const project = db.prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?").get(id, session!.sub) as
+  const db = await getDb();
+  const project = (await db.prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?").get(id, session!.sub)) as
     | Record<string, unknown>
     | undefined;
   if (!project) notFound();
 
-  const findings = db
+  const findings = (await db
     .prepare("SELECT * FROM compliance_findings WHERE project_id = ? ORDER BY severity DESC LIMIT 60")
-    .all(id) as Array<Record<string, unknown>>;
+    .all(id)) as Array<Record<string, unknown>>;
 
   const special = parseJson<string[]>(String(project.special_conditions ?? "[]"), []);
-  const retrieved = searchRequirements({ query: occupancyGroups(String(project.occupancy ?? "")).join(" "), limit: 18 });
+  const retrieved = await searchRequirements({ query: occupancyGroups(String(project.occupancy ?? "")).join(" "), limit: 18 });
   const authority = project.authority_id
-    ? (db.prepare("SELECT name FROM authorities WHERE id = ?").get(project.authority_id) as { name: string } | undefined)
+    ? ((await db.prepare("SELECT name FROM authorities WHERE id = ?").get(project.authority_id)) as { name: string } | undefined)
     : undefined;
 
   const score = project.readiness_score as number | null;

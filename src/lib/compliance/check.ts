@@ -117,7 +117,7 @@ function responsibleFor(requirement_type: string, text: string): string {
 }
 
 export async function runComplianceCheck(project: Record<string, unknown>): Promise<ComplianceResult> {
-  const db = getDb();
+  const db = await getDb();
   const profile = profileFromProject(project);
   const engineResult = evaluateRules(profile, RULE_LIBRARY);
   const score = computeReadinessScore(engineResult.findings);
@@ -141,7 +141,7 @@ export async function runComplianceCheck(project: Record<string, unknown>): Prom
     .filter((p): p is number => Boolean(p));
 
   const groups = occupancyGroups(String(project.occupancy ?? ""));
-  const retrieved = searchRequirements({
+  const retrieved = await searchRequirements({
     query: [String(project.occupancy ?? ""), ...groups].join(" "),
     limit: 20
   });
@@ -162,7 +162,7 @@ export async function runComplianceCheck(project: Record<string, unknown>): Prom
   }));
 
   const check_id = uid("chk");
-  db.prepare(
+  await db.prepare(
     `INSERT INTO compliance_checks (id, project_id, status, summary_json, created_at)
      VALUES (?, ?, 'completed', ?, ?)`
   ).run(check_id, project.id, JSON.stringify({ readiness_score: score, findings: engineResult.findings.length }), now());
@@ -173,7 +173,7 @@ export async function runComplianceCheck(project: Record<string, unknown>): Prom
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   for (const f of engineResult.findings) {
-    insertFinding.run(
+    await insertFinding.run(
       uid("fnd"),
       check_id,
       project.id,
@@ -189,7 +189,7 @@ export async function runComplianceCheck(project: Record<string, unknown>): Prom
     );
   }
 
-  db.prepare("UPDATE projects SET readiness_score = ?, status = 'reviewed', updated_at = ? WHERE id = ?").run(
+  await db.prepare("UPDATE projects SET readiness_score = ?, status = 'reviewed', updated_at = ? WHERE id = ?").run(
     score,
     now(),
     project.id

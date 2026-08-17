@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest("Invalid lead payload.");
 
     const session = await getSession();
-    const { id } = saveLead({
+    const { id } = await saveLead({
       ...parsed.data,
       user_id: session?.sub
     });
@@ -55,8 +55,8 @@ export async function GET(req: Request) {
     if (conditions.length) query += " WHERE " + conditions.join(" AND ");
     query += " ORDER BY created_at DESC LIMIT 50";
 
-    const db = getDb();
-    const leads = db.prepare(query).all(...params);
+    const db = await getDb();
+    const leads = await db.prepare(query).all(...params);
     return ok({ leads });
   } catch (e) {
     return handleError(e);

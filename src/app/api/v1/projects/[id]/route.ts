@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getDb, now, uid, parseJson } from "@/lib/db";
+import type { BoundDB } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { ok, badRequest, notFound, unauthorized, forbidden, handleError } from "@/lib/api";
 
@@ -22,8 +23,8 @@ const patchSchema = z.object({
   authority_id: z.string().max(60).nullable().optional()
 });
 
-function loadProject(db: ReturnType<typeof getDb>, id: string, userId: string) {
-  const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+async function loadProject(db: BoundDB, id: string, userId: string) {
+  const project = (await db.prepare("SELECT * FROM projects WHERE id = ?").get(id)) as Record<string, unknown> | undefined;
   if (!project) return null;
   if (project.user_id !== userId) return "FORBIDDEN";
   return project;
@@ -34,12 +35,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!session) return unauthorized();
   try {
     const { id } = await params;
-    const db = getDb();
-    const project = loadProject(db, id, session.sub);
+    const db = await getDb();
+    const project = await loadProject(db, id, session.sub);
     if (project === null) return notFound("Project not found");
     if (project === "FORBIDDEN") return forbidden();
-    const findings = db.prepare("SELECT * FROM compliance_findings WHERE project_id = ? ORDER BY created_at DESC LIMIT 100").all(id) as unknown[];
-    const checks = db.prepare("SELECT * FROM compliance_checks WHERE project_id = ? ORDER BY created_at DESC").all(id) as unknown[];
+    const findings = (await db.prepare("SELECT * FROM compliance_findings WHERE project_id = ? ORDER BY created_at DESC LIMIT 100").all(id)) as unknown[];
+    const checks = (await db.prepare("SELECT * FROM compliance_checks WHERE project_id = ? ORDER BY created_at DESC").all(id)) as unknown[];
     return ok({ project, findings, checks });
   } catch (e) {
     return handleError(e);
@@ -51,8 +52,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!session) return unauthorized();
   try {
     const { id } = await params;
-    const db = getDb();
-    const existing = loadProject(db, id, session.sub);
+    const db = await getDb();
+    const existing = await loadProject(db, id, session.sub);
     if (existing === null) return notFound("Project not found");
     if (existing === "FORBIDDEN") return forbidden();
 
@@ -78,11 +79,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     cols.push("updated_at = ?");
     vals.push(now());
     vals.push(id);
-    db.prepare(`UPDATE projects SET ${cols.join(", ")} WHERE id = ?`).run(...vals);
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'update', 'project', ?, ?)").run(
+    await db.prepare(`UPDATE projects SET ${cols.join(", ")} WHERE id = ?`).run(...vals);
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'update', 'project', ?, ?)").run(
       uid("aud"), session.sub, id, JSON.stringify({ fields: Object.keys(p) })
     );
-    const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as Record<string, unknown>;
+    const project = (await db.prepare("SELECT * FROM projects WHERE id = ?").get(id)) as Record<string, unknown>;
     return ok({ project });
   } catch (e) {
     return handleError(e);

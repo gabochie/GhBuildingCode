@@ -29,10 +29,10 @@ export async function GET() {
   const session = await getSession();
   if (!session) return unauthorized();
   try {
-    const db = getDb();
-    const projects = db
+    const db = await getDb();
+    const projects = (await db
       .prepare("SELECT * FROM projects WHERE user_id = ? ORDER BY updated_at DESC")
-      .all(session.sub) as unknown[];
+      .all(session.sub)) as unknown[];
     return ok({ projects });
   } catch (e) {
     return handleError(e);
@@ -46,11 +46,11 @@ export async function POST(req: Request) {
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid project payload.");
     const p = parsed.data;
-    const db = getDb();
-    const chk = checkLimit(session.sub, session.plan, "projects");
+    const db = await getDb();
+    const chk = await checkLimit(session.sub, session.plan, "projects");
     if (!chk.allowed) return limitReached("projects", chk.used, chk.limit, session.plan);
     const id = uid("prj");
-    db.prepare(
+    await db.prepare(
       `INSERT INTO projects
         (id, user_id, name, status, location_region, location_district, location_assembly,
          project_type, occupancy, floors, building_height, floor_area, site_area, occupants,
@@ -64,20 +64,20 @@ export async function POST(req: Request) {
       p.basement == null ? null : p.basement ? 1 : 0, p.roof_type ?? null, JSON.stringify(p.special_conditions ?? []),
       p.authority_id ?? null, now(), now()
     );
-    const project = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as Record<string, unknown>;
+    const project = (await db.prepare("SELECT * FROM projects WHERE id = ?").get(id)) as Record<string, unknown>;
 
     let review = null;
     if (p.auto_review) {
       review = await runComplianceCheck(project);
-      db.prepare("UPDATE projects SET readiness_score = ?, status = 'reviewed' WHERE id = ?").run(
+      await db.prepare("UPDATE projects SET readiness_score = ?, status = 'reviewed' WHERE id = ?").run(
         review.readiness_score, id
       );
     }
 
-    db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'create', 'project', ?, ?)").run(
+    await db.prepare("INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json) VALUES (?, ?, 'create', 'project', ?, ?)").run(
       uid("aud"), session.sub, id, JSON.stringify({ name: p.name })
     );
-    const updated = db.prepare("SELECT * FROM projects WHERE id = ?").get(id) as Record<string, unknown>;
+    const updated = (await db.prepare("SELECT * FROM projects WHERE id = ?").get(id)) as Record<string, unknown>;
     return created({ project: updated, review });
   } catch (e) {
     return handleError(e);

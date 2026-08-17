@@ -26,7 +26,7 @@ const CATEGORY_TONE: Record<string, "default" | "primary" | "info" | "success"> 
 
 export default async function BlogListPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {
   const { category } = await searchParams;
-  const db = getDb();
+  const db = await getDb();
 
   let query = "SELECT id, slug, title, excerpt, category, tags, author_name, published_at FROM blog_posts WHERE status = 'published'";
   const args: string[] = [];
@@ -34,7 +34,7 @@ export default async function BlogListPage({ searchParams }: { searchParams: Pro
   if (category) { query += " AND category = ?"; args.push(category); }
   query += " ORDER BY published_at DESC LIMIT 50";
 
-  const posts = db.prepare(query).all(...args) as Array<{ id: string; slug: string; title: string; excerpt: string | null; category: string; tags: string; author_name: string; published_at: string | null }>;
+  const posts = (await db.prepare(query).all(...args)) as Array<{ id: string; slug: string; title: string; excerpt: string | null; category: string; tags: string; author_name: string; published_at: string | null }>;
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">

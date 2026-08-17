@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     const status = url.searchParams.get("status");
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
-    const db = getDb();
+    const db = await getDb();
     let query = "SELECT id, slug, title, excerpt, category, tags, status, author_name, published_at, created_at, updated_at FROM blog_posts";
     const conditions: string[] = [];
     const params: string[] = [];
@@ -44,7 +44,7 @@ export async function GET(req: Request) {
     query += " ORDER BY published_at DESC, created_at DESC LIMIT ?";
     params.push(String(limit));
 
-    const posts = db.prepare(query).all(...params);
+    const posts = await db.prepare(query).all(...params);
     return ok({ posts });
   } catch (e) {
     return handleError(e);
@@ -62,9 +62,9 @@ export async function POST(req: Request) {
 
     const data = parsed.data;
     const slug = data.slug || slugify(data.title);
-    const db = getDb();
+    const db = await getDb();
 
-    const existing = db.prepare("SELECT id FROM blog_posts WHERE slug = ?").get(slug);
+    const existing = await db.prepare("SELECT id FROM blog_posts WHERE slug = ?").get(slug);
     if (existing) return badRequest("A post with this slug already exists.");
 
     const id = uid("post");
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       ? (data.tags.startsWith("[") ? data.tags : JSON.stringify(data.tags.split(",").map((t: string) => t.trim()).filter(Boolean)))
       : "[]";
 
-    db.prepare(
+    await db.prepare(
       `INSERT INTO blog_posts (id, slug, title, excerpt, body, cover_image, category, tags, status, author_name, author_user_id, published_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(

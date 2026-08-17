@@ -7,14 +7,14 @@ import { Landmark } from "lucide-react";
 
 export default async function AuthoritiesPage() {
   const session = await getSession();
-  const db = getDb();
+  const db = await getDb();
 
-  const authorities = db
+  const authorities = (await db
     .prepare(
       `SELECT a.*, (SELECT COUNT(*) FROM authority_checklists c WHERE c.authority_id = a.id) AS checklist_count
        FROM authorities a ORDER BY a.authority_type ASC, a.name ASC`
     )
-    .all() as Array<Record<string, unknown>>;
+    .all()) as Array<Record<string, unknown>>;
 
   return (
     <div>

@@ -10,7 +10,8 @@ export async function getSession(): Promise<SessionClaims | null> {
   if (!token) return null;
   const claims = verifySession(token);
   if (!claims) return null;
-  const user = getDb().prepare("SELECT plan FROM users WHERE id = ?").get(claims.sub) as { plan: string } | undefined;
+  const db = await getDb();
+  const user = (await db.prepare("SELECT plan FROM users WHERE id = ?").get(claims.sub)) as { plan: string } | undefined;
   if (!user) return null;
   return { ...claims, plan: user.plan };
 }
@@ -28,8 +29,8 @@ export async function requireAdmin(): Promise<SessionClaims> {
 }
 
 export async function getDbUser(session: SessionClaims) {
-  const db = getDb();
-  return db.prepare("SELECT id, email, name, role, plan FROM users WHERE id = ?").get(session.sub) as
+  const db = await getDb();
+  return (await db.prepare("SELECT id, email, name, role, plan FROM users WHERE id = ?").get(session.sub)) as
     | { id: string; email: string; name: string; role: string; plan: string }
     | undefined;
 }

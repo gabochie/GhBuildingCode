@@ -513,8 +513,8 @@ const MIGRATIONS = [
   "ALTER TABLE blog_posts ADD COLUMN meta_description TEXT",
 ];
 
-export function runMigrations(db: { exec: (sql: string) => void }) {
+export async function runMigrations(db: { exec: (sql: string) => Promise<void> }) {
   for (const sql of MIGRATIONS) {
-    try { db.exec(sql); } catch { /* column already exists */ }
+    try { await db.exec(sql); } catch { /* column already exists */ }
   }
 }
