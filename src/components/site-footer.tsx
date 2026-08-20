@@ -69,7 +69,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row">
-          <div>© {new Date().getFullYear()} GHBC · Ghana Building Compliance Intelligence</div>
+          <div>© {new Date().getFullYear()} GHBC · A <a href="https://gabochie.com" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">Gabochie Design</a> Product</div>
           <div className="flex items-center gap-4">
             <span>ghbc.gabochie.com</span>
             <span className="hidden h-3 w-px bg-border sm:block" />
