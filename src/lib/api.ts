@@ -74,6 +74,18 @@ export async function requireUserOrResponse(): Promise<SessionClaims | NextRespo
   return session;
 }
 
+export async function requireUser(): Promise<SessionClaims> {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHENTICATED");
+  return session;
+}
+
+export async function requireAdmin(): Promise<SessionClaims> {
+  const session = await requireUser();
+  if (session.role !== "admin") throw new Error("FORBIDDEN");
+  return session;
+}
+
 export function handleError(e: unknown) {
   const msg = e instanceof Error ? e.message : "Unknown error";
   if (msg === "UNAUTHENTICATED") return unauthorized();

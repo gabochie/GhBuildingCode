@@ -1,13 +1,7 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui";
 import { ContentPipeline } from "./pipeline";
 
-export default async function AdminContentPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "admin") redirect("/dashboard");
-
+export default function AdminContentPage() {
   return (
     <div className="space-y-8">
       <div>

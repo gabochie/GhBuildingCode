@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
-import { ok, badRequest, unauthorized, handleError } from "@/lib/api";
+import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
 import { saveLead } from "@/lib/voice/lead-capture";
 
 const postSchema = z.object({
