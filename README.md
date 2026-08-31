@@ -22,13 +22,13 @@ track the documents an approving authority will expect.
 
 ```bash
 npm install
-cp .env.example .env        # set AUTH_SECRET (>=16 chars), optional AI keys
-npm run ingest              # build + seed data/ghbc.db (idempotent)
+cp .env.example .env        # set AUTH_SECRET (>=32 chars), optional AI keys
+npm run ingest              # build + seed data/ghbc.db (GHBC_ADMIN_PASSWORD is REQUIRED)
 npm run dev                 # http://localhost:3000
 ```
 
-Seeded admin: `admin@ghbc.gabochie.com` / `ChangeMe123!` (override via `GHBC_ADMIN_EMAIL`,
-`GHBC_ADMIN_PASSWORD` — **change in production**).
+Seeded admin is created from `GHBC_ADMIN_EMAIL` / `GHBC_ADMIN_PASSWORD` in `.env`
+(**both are required** — the seed script refuses to run without a password).
 
 Demo accounts (created by `npm run seed:users` with generated passwords, printed to the
 terminal): `demo@ghbc.gabochie.com`, `pro@ghbc.gabochie.com`, `team@ghbc.gabochie.com`.

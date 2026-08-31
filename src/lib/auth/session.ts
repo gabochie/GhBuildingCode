@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
-import { verifySession, type SessionClaims } from "./tokens";
+import { verifySession } from "./tokens";
+import type { SessionClaims } from "./tokens";
 import { getDb } from "@/lib/db";
+
+export type { SessionClaims };
 
 const COOKIE_NAME = "ghbc_session";
 

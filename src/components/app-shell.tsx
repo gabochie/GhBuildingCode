@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   LayoutDashboard,
@@ -17,8 +18,7 @@ import {
   UserRound,
   Settings2,
   LogOut,
-  Mic,
-  Newspaper
+  Mic
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -47,9 +47,21 @@ export function AppShell({
   showAdmin: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await fetch("/api/v1/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/login");
+    }
+  }
 
   const nav = showAdmin
-    ? [...NAV, { href: "/admin", label: "Admin", icon: Settings2 }, { href: "/admin/blog", label: "Blog Manager", icon: Newspaper }, { href: "/admin/content", label: "Content Pipeline", icon: Bot }]
+    ? [...NAV, { href: "/admin", label: "Admin Console", icon: Settings2 }]
     : NAV;
 
   return (
@@ -94,12 +106,14 @@ export function AppShell({
             </Link>
           </div>
           <div className="flex items-center justify-between">
-            <Link
-              href="/api/v1/auth/logout"
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-xs text-slate-400 hover:bg-white/5 hover:text-slate-200"
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-xs text-slate-400 hover:bg-white/5 hover:text-slate-200 disabled:opacity-50"
             >
-              <LogOut className="h-3.5 w-3.5" /> Sign out
-            </Link>
+              <LogOut className="h-3.5 w-3.5" /> {signingOut ? "Signing out…" : "Sign out"}
+            </button>
             <ThemeToggle />
           </div>
         </div>

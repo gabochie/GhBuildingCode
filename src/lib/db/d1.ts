@@ -7,6 +7,8 @@
  * API matches better-sqlite3 patterns to minimize migration churn.
  */
 
+import { randomUUID } from "node:crypto";
+
 /** Cloudflare D1 database binding — minimal type declaration */
 export interface D1Database {
   prepare(sql: string): D1PreparedStatement;
@@ -168,7 +170,8 @@ export function now(): string {
 }
 
 export function uid(prefix = "id"): string {
-  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  const rand = randomUUID().replace(/-/g, "").slice(0, 12);
+  return `${prefix}_${Date.now().toString(36)}${rand}`;
 }
 
 export function json(v: unknown): string {
