@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { signSession, verifySession, type SessionClaims } from "../src/lib/auth/tokens.ts";
 
-process.env.AUTH_SECRET = "test-secret-key-must-be-at-least-16-chars!!";
+process.env.AUTH_SECRET = "test-secret-key-must-be-at-least-32-chars-long-123456";
 
 const CLAIMS: SessionClaims = {
   sub: "usr_abc123",
@@ -35,10 +35,10 @@ test("verifySession returns null for an invalid token", () => {
 
 test("verifySession returns null for a token signed with wrong secret", () => {
   const original = process.env.AUTH_SECRET;
-  process.env.AUTH_SECRET = "original-secret-16chars!!!";
+  process.env.AUTH_SECRET = "original-secret-longer-than-thirty-two-chars-abc";
   const token = signSession(CLAIMS);
 
-  process.env.AUTH_SECRET = "different-secret-16chars!";
+  process.env.AUTH_SECRET = "different-secret-longer-than-thirty-two-chars-xyz";
   const result = verifySession(token);
   assert.equal(result, null);
 
@@ -54,7 +54,7 @@ test("signSession with missing AUTH_SECRET throws", () => {
 
 test("signSession with short AUTH_SECRET throws", () => {
   const original = process.env.AUTH_SECRET;
-  process.env.AUTH_SECRET = "short";
+  process.env.AUTH_SECRET = "short-secret";
   assert.throws(() => signSession(CLAIMS), /AUTH_SECRET/);
   process.env.AUTH_SECRET = original;
 });
