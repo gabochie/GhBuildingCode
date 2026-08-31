@@ -1,16 +1,9 @@
-import { redirect } from "next/navigation";
-import { getSession, getDbUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Table, THead, TR, TH, TD } from "@/components/ui";
 import { PlanEditor } from "./plan-editor";
 
 export default async function AdminPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  const user = await getDbUser(session);
-  if (!user || user.role !== "admin") redirect("/dashboard");
-
   const db = await getDb();
   const stats = {
     users: ((await db.prepare("SELECT COUNT(*) c FROM users").get()) as { c: number }).c,
