@@ -447,7 +447,10 @@ function seedRules() {
 
 async function seedAdmin() {
   const email = (process.env.GHBC_ADMIN_EMAIL || "admin@ghbc.gabochie.com").toLowerCase();
-  const password = process.env.GHBC_ADMIN_PASSWORD || "ChangeMe123!";
+  const password = process.env.GHBC_ADMIN_PASSWORD;
+  if (!password) {
+    throw new Error("GHBC_ADMIN_PASSWORD must be set when seeding. Refusing to use a default password.");
+  }
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
   if (!existing) {
     const hash = await hashPassword(password);

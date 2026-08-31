@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { getSession } from "@/lib/auth/session";
+import { getSession, type SessionClaims } from "@/lib/auth/session";
 import { getPlan } from "@/lib/billing/plans";
 
 export interface ApiEnvelope {
@@ -68,9 +68,9 @@ export function serverError(message = "Internal error") {
   return NextResponse.json(envelope("error", { error: message }), { status: 500 });
 }
 
-export async function requireUserOrResponse() {
+export async function requireUserOrResponse(): Promise<SessionClaims | NextResponse> {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return unauthorized();
   return session;
 }
 
@@ -79,5 +79,8 @@ export function handleError(e: unknown) {
   if (msg === "UNAUTHENTICATED") return unauthorized();
   if (msg === "FORBIDDEN") return forbidden();
   console.error("[api]", e);
+  if (process.env.NODE_ENV === "production") {
+    return serverError("Internal error");
+  }
   return serverError(msg);
 }

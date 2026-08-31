@@ -10,8 +10,8 @@ export interface SessionClaims {
 
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
-  if (!secret || secret.length < 16) {
-    throw new Error("AUTH_SECRET must be set to a value of at least 16 chars.");
+  if (!secret || secret.length < 32) {
+    throw new Error("AUTH_SECRET must be set to a value of at least 32 chars (use `openssl rand -base64 48`).");
   }
   return secret;
 }

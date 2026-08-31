@@ -1,12 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function POST() {
+async function clearSession() {
   (await cookies()).delete("ghbc_session");
-  return NextResponse.redirect(new URL("/login", process.env.APP_URL || "http://localhost:3000"));
+}
+
+export async function POST() {
+  clearSession();
+  return NextResponse.json({ ok: true });
 }
 
 export async function GET() {
-  (await cookies()).delete("ghbc_session");
-  return NextResponse.redirect(new URL("/login", process.env.APP_URL || "http://localhost:3000"));
+  // GET is intentionally not implemented to prevent CSRF-style logout via <img>/<a> navigation.
+  return new NextResponse("Method Not Allowed", { status: 405 });
 }
