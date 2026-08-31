@@ -22,6 +22,14 @@ export interface Rule {
   conditions: RuleCondition[];
   input_variables: string[];
   outputs: RuleOutput[];
+  /**
+   * Optional per-output selection predicates. The engine emits the output whose
+   * index is first listed with all its conditions satisfied. When absent (or no
+   * predicate matches), it falls back to `outputs[0]`. This enables real
+   * threshold evaluation (e.g. riser within 102–178mm -> PASS, otherwise FAIL)
+   * rather than always emitting the first output.
+   */
+  output_conditions?: Array<{ output_index: number; conditions: RuleCondition[] }>;
 }
 
 export type ProjectProfile = Record<string, unknown>;
@@ -57,6 +65,10 @@ export const RULE_LIBRARY: Rule[] = [
         issue: "Stair riser height outside permitted range",
         reason: "§11.11.5.2 requires riser heights 102 mm (4 in) minimum and 178 mm (7 in) maximum."
       }
+    ],
+    output_conditions: [
+      { output_index: 1, conditions: [{ key: "stair_riser_height", operator: "lt", value: 102 }] },
+      { output_index: 1, conditions: [{ key: "stair_riser_height", operator: "gt", value: 178 }] }
     ]
   },
   {
@@ -81,6 +93,9 @@ export const RULE_LIBRARY: Rule[] = [
         issue: "Stair tread depth below minimum",
         reason: "§11.11.5.2 requires rectangular tread depths 279 mm (11 in) minimum."
       }
+    ],
+    output_conditions: [
+      { output_index: 1, conditions: [{ key: "stair_tread_depth", operator: "lt", value: 279 }] }
     ]
   },
   {
@@ -105,6 +120,9 @@ export const RULE_LIBRARY: Rule[] = [
         issue: "Stair clear width below minimum",
         reason: "§11.9.3.2 requires 1219 mm (48 in) minimum clear width between handrails (exception for sprinklered buildings)."
       }
+    ],
+    output_conditions: [
+      { output_index: 1, conditions: [{ key: "stair_width", operator: "lt", value: 1219 }, { key: "sprinklered", operator: "eq", value: false }] }
     ]
   },
   {

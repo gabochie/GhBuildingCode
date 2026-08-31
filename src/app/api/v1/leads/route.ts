@@ -2,9 +2,7 @@ import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
-import { saveLead } from "@/lib/voice/lead-capture";
-
-const postSchema = z.object({
+import { saveLead } from "@/lib/voice/lead-capture";const postSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   email: z.string().min(3).max(255),
   phone: z.string().min(1).max(40).optional(),
@@ -34,11 +32,8 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return unauthorized("Admin access required.");
-
   try {
+    await requireAdmin();
     const url = new URL(req.url);
     const source = url.searchParams.get("source");
     const channel = url.searchParams.get("channel");

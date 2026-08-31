@@ -2,7 +2,7 @@ import { getDb } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { generateCompliancePdf } from "@/lib/reports/pdf";
 import { notFound, unauthorized, forbidden, limitReached, handleError } from "@/lib/api";
-import { checkLimit, incrementUsage } from "@/lib/billing/plans";
+import { consumeQuota } from "@/lib/billing/plans";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -14,11 +14,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!project) return notFound("Project not found");
     if (project.user_id !== session.sub) return forbidden();
 
-    const chk = await checkLimit(session.sub, session.plan, "reportsPerMonth");
+    const chk = await consumeQuota(session.sub, session.plan, "reportsPerMonth");
     if (!chk.allowed) return limitReached("PDF reports", chk.used, chk.limit, session.plan);
 
     const pdf = await generateCompliancePdf(id, session.sub);
-    await incrementUsage(session.sub, "reports");
     return new Response(new Uint8Array(pdf), {
       headers: {
         "Content-Type": "application/pdf",

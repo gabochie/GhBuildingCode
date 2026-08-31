@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { ok, badRequest, unauthorized, handleError } from "@/lib/api";
-import { getSession } from "@/lib/auth/session";
+import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
 import { chatCompletion, aiConfigured } from "@/lib/ai/provider";
 
 function slugify(s: string): string {
@@ -44,15 +43,12 @@ Output JSON with this exact structure:
 }`;
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return unauthorized("Admin access required.");
-
   if (!aiConfigured()) {
     return badRequest("AI provider not configured. Set AI_API_KEY in your .env file.");
   }
 
   try {
+    await requireAdmin();
     const parsed = GENERATE_SCHEMA.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid payload. Provide topics (array), optional category, optional wordCount.");
 
