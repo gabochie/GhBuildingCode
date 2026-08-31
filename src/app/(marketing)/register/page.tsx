@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Copy, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label } from "@/components/ui";
 import { generatePassword } from "@/lib/password-gen";
+import { trackEvent } from "@/lib/analytics";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function RegisterPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.data?.error || "Registration failed.");
+      trackEvent("signup_completed");
       router.push("/dashboard");
       router.refresh();
     } catch (err) {

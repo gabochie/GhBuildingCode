@@ -36,11 +36,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     knowsAbout: ["GS 1207:2018", "Ghana Building Code", "building compliance", "construction safety"]
   };
 
+  // Privacy-first, cookie-free analytics (Plausible). Only active when the
+  // domain is configured; otherwise nothing is loaded.
+  const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
+        {plausibleDomain ? (
+          <script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" />
+        ) : null}
       </head>
       <body className={cn("min-h-screen antialiased")}>{children}</body>
     </html>

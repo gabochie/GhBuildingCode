@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Input, Label, Textarea } from "@/components/ui";
+import { trackEvent } from "@/lib/analytics";
 
 export default function DemoPage() {
   const [name, setName] = useState("");
@@ -26,6 +27,7 @@ export default function DemoPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.data?.error || "Submission failed.");
+      trackEvent("lead_demo_submitted");
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed.");

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsletterForm } from "@/components/newsletter-form";
 
 const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
   {
@@ -65,6 +66,15 @@ export function SiteFooter() {
               </ul>
             </div>
           ))}
+        </div>
+        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-8 md:flex-row md:items-center">
+          <div className="max-w-xs">
+            <h3 className="text-sm font-semibold">Compliance updates, in your inbox</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              New GS 1207 guidance and permit changes — a few times a month, no spam.
+            </p>
+          </div>
+          <NewsletterForm compact />
         </div>
       </div>
       <div className="border-t border-border">
