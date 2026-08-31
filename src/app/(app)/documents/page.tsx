@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, Select, Label, Badge, Button } from "@/components/ui";
 import { PageHeader } from "@/components/page-header";
 import { UploadCloud, FileText, Loader2, FileSearch } from "lucide-react";
@@ -27,7 +27,7 @@ export default function DocumentsPage() {
   const [review, setReview] = useState<{ text_length: number; features: ReviewFinding[] } | null>(null);
   const [error, setError] = useState("");
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     try {
       const [pj, dc] = await Promise.all([
         fetch("/api/v1/projects").then((r) => r.json()),
@@ -36,9 +36,9 @@ export default function DocumentsPage() {
       setProjects(pj.data?.projects ?? []);
       setDocs(dc.data?.documents ?? []);
     } catch { /* non-critical — silently ignore */ }
-  }
+  }, [projectId]);
 
-  useEffect(() => { refresh(); }, [projectId]);
+  useEffect(() => { refresh(); }, [refresh]);
 
   async function upload(e: React.FormEvent) {
     e.preventDefault();

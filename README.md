@@ -52,7 +52,7 @@ password (CSPRNG, one of each character class), reveals it, and offers copy-to-c
 
 | Variable | Purpose |
 | --- | --- |
-| `AUTH_SECRET` | JWT signing secret (≥16 chars). **Required.** |
+| `AUTH_SECRET` | JWT signing secret (≥32 chars). **Required.** |
 | `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` | OpenAI-compatible provider (e.g. OpenRouter). Leave `AI_API_KEY` empty to use the deterministic fallback. |
 | `GHBC_ADMIN_EMAIL` / `GHBC_ADMIN_PASSWORD` | Bootstrap admin credentials |
 | `BCGH_CORPUS` | Path to the processed corpus |

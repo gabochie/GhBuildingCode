@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Badge } from "@/components/ui";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
@@ -139,7 +140,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           </div>
 
           {coverImage && (
-            <img src={coverImage} alt={title} className="mb-8 w-full rounded-xl object-cover" style={{ maxHeight: 400 }} />
+            <div className="relative mb-8 w-full overflow-hidden rounded-xl bg-muted" style={{ maxHeight: 400, aspectRatio: "2 / 1" }}>
+              <Image src={coverImage} alt={title} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" unoptimized />
+            </div>
           )}
 
           <div className="prose prose-slate max-w-none whitespace-pre-wrap text-sm leading-relaxed">
