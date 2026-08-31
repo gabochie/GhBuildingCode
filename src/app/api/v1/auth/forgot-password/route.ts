@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { ok, badRequest, handleError } from "@/lib/api";
+import { ok, badRequest, handleError, tooManyRequests } from "@/lib/api";
 import { randomBytes } from "node:crypto";
 import { sendEmail, passwordResetEmailHtml } from "@/lib/email";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const schema = z.object({ email: z.string().min(3).max(255) });
 
@@ -10,13 +11,33 @@ function generateToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+function clientIp(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
 export async function POST(req: Request) {
   try {
+    // Protect the mail-sending endpoint from being abused as a spam relay.
+    const ip = clientIp(req);
+    const rl = await rateLimit("forgot", ip);
+    if (!rl.allowed) return tooManyRequests("Too many reset requests. Please try again later.", rateLimitHeaders(rl));
+
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Please provide a valid email address.");
 
     const email = parsed.data.email.trim().toLowerCase();
     const db = await getDb();
+
+    // Prevent excessive reset emails to a single inbox.
+    const emailRl = await rateLimit("email", email);
+    if (!emailRl.allowed) {
+      return ok({ message: "If an account with that email exists, a reset link has been sent." });
+    }
+
     const user = (await db.prepare("SELECT id FROM users WHERE email = ?").get(email)) as { id: string } | undefined;
 
     // Always return success to prevent email enumeration

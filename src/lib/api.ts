@@ -68,6 +68,13 @@ export function serverError(message = "Internal error") {
   return NextResponse.json(envelope("error", { error: message }), { status: 500 });
 }
 
+export function tooManyRequests(message = "Too many requests. Please try again shortly.", headers?: Record<string, string>) {
+  return NextResponse.json(
+    envelope("error", { error: message, code: "RATE_LIMITED" }),
+    { status: 429, headers }
+  );
+}
+
 export async function requireUserOrResponse(): Promise<SessionClaims | NextResponse> {
   const session = await getSession();
   if (!session) return unauthorized();

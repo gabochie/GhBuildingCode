@@ -61,23 +61,23 @@ export async function rateLimit(
     )
     .run(fullKey, start, cfg.limit);
 
+  // Read the authoritative count for this window (either the value we just
+  // wrote, or the current count when the limit was hit).
+  const row = (await db
+    .prepare("SELECT count FROM rate_limits WHERE key = ? AND window_start = ?")
+    .get(fullKey, start)) as { count: number } | null;
+  const count = row?.count ?? (result.changes > 0 ? 1 : cfg.limit);
+
   if (result.changes > 0) {
-    const remaining = Math.max(0, cfg.limit - 1);
     return {
       allowed: true,
       windowStart: start,
-      count: 1,
-      remaining,
+      count,
+      remaining: Math.max(0, cfg.limit - count),
       retryAfter: start + cfg.windowMs
     };
   }
 
-  // Limit reached: report the current count from the row.
-  const row = (await db
-    .prepare("SELECT count FROM rate_limits WHERE key = ? AND window_start = ?")
-    .get(fullKey, start)) as { count: number } | null;
-
-  const count = row?.count ?? cfg.limit;
   return {
     allowed: false,
     windowStart: start,
