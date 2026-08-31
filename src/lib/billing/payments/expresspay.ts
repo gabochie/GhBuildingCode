@@ -20,8 +20,11 @@ import type { PaymentStatus } from "./gateway";
 export class ExpressPayGateway implements PaymentGateway {
   id = "expresspay" as const;
   webhookPath = "/api/v1/billing/webhooks/expresspay";
+  private cfg: ExpressPayConfig;
 
-  constructor(private cfg: ExpressPayConfig = expressPayConfig()!) {}
+  constructor(cfg: ExpressPayConfig = expressPayConfig()!) {
+    this.cfg = cfg;
+  }
 
   isEnabled(): boolean {
     return !!this.cfg && this.cfg.enabled;
