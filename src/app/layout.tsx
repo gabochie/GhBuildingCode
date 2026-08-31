@@ -51,7 +51,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : null}
       </head>
       <body className={cn("min-h-screen antialiased")}>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
