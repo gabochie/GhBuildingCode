@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Label, Select } from "@/components/ui";
-import { Check, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { Check, Loader2, Building2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 interface GatewayInfo {
   id: string;
@@ -43,6 +44,32 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
   const [pendingRef, setPendingRef] = useState<string | null>(null);
   const [momoMessage, setMomoMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const [entOrg, setEntOrg] = useState("");
+  const [entPhone, setEntPhone] = useState("");
+  const [entMessage, setEntMessage] = useState("");
+  const [entState, setEntState] = useState<"idle" | "loading" | "done">("idle");
+  const [entError, setEntError] = useState("");
+
+  async function requestEnterprise(e: React.FormEvent) {
+    e.preventDefault();
+    setEntState("loading");
+    setEntError("");
+    try {
+      const res = await fetch("/api/v1/billing/request-upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "enterprise", organization: entOrg, phone: entPhone, message: entMessage })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.data?.error || "Request failed.");
+      setEntState("done");
+      trackEvent("request_enterprise");
+    } catch (err) {
+      setEntState("idle");
+      setEntError(err instanceof Error ? err.message : "Request failed.");
+    }
+  }
 
   useEffect(() => {
     fetch("/api/v1/billing/config")
@@ -189,6 +216,52 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Enterprise &amp; custom plans</CardTitle>
+          <CardDescription>
+            SSO, unlimited usage, audit logs, dedicated deployment or a custom knowledge base. Tell us what you need and our team will set it up.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {entState === "done" ? (
+            <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-4">
+              <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <p className="text-sm font-semibold">Request received.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  We&apos;ll contact you at <span className="font-medium text-foreground">{email}</span> to discuss your Enterprise plan.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={requestEnterprise} className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="ent-org">Organization</Label>
+                  <Input id="ent-org" value={entOrg} onChange={(e) => setEntOrg(e.target.value)} placeholder="Developer, bank, insurer, government…" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ent-phone">Phone (optional)</Label>
+                  <Input id="ent-phone" type="tel" value={entPhone} onChange={(e) => setEntPhone(e.target.value)} placeholder="+233 XX XXX XXXX" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ent-message">What do you need?</Label>
+                <Textarea id="ent-message" value={entMessage} onChange={(e) => setEntMessage(e.target.value)} placeholder="e.g. licensing for a 50-user practice, SSO, on-prem deployment…" />
+              </div>
+              {entError && <p className="text-sm text-destructive">{entError}</p>}
+              <div>
+                <Button type="submit" disabled={entState === "loading"} variant="outline">
+                  {entState === "loading" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Talk to us about Enterprise
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

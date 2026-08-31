@@ -2,7 +2,9 @@ import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Badge } from "@/components/ui";
+import Link from "next/link";
+import { Badge, Button } from "@/components/ui";
+import { NewsletterForm } from "@/components/newsletter-form";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
@@ -157,6 +159,24 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
             </div>
           )}
         </article>
+
+        <aside className="mt-10 rounded-2xl bg-sidebar px-8 py-10 text-center text-sidebar-foreground">
+          <h2 className="text-xl font-bold text-white">Check your project against the Ghana Building Code</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+            Ask GHBC, get source-backed answers, and see a compliance matrix for your project — free to start.
+          </p>
+          <Link href="/register" className="mt-6 inline-block">
+            <Button size="lg" className="bg-white text-slate-900 hover:opacity-90">Check a project free</Button>
+          </Link>
+        </aside>
+
+        <aside className="mt-8 rounded-xl border border-border bg-card p-6">
+          <h3 className="font-semibold">Get building-compliance updates in your inbox</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Regulatory and permit changes — a few times a month, no spam.</p>
+          <div className="mt-4">
+            <NewsletterForm />
+          </div>
+        </aside>
       </main>
     </>
   );

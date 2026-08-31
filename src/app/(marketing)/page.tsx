@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { TrackedCta } from "@/components/tracked-cta";
+import { NewsletterForm } from "@/components/newsletter-form";
+import { PLANS } from "@/lib/billing/plans";
 import {
   MessageSquareText,
   ShieldCheck,
@@ -10,7 +13,9 @@ import {
   Landmark,
   Building2,
   ScrollText,
-  Workflow
+  Workflow,
+  Check,
+  Sparkles
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -58,6 +63,11 @@ const modules = [
   { icon: ScrollText, title: "Regulatory Source Library", body: "Structured, versioned, editorial-controlled regulatory knowledge." }
 ];
 
+// Public pricing preview — matches src/lib/billing/plans.ts (GHS local pricing).
+const pricing = ["free", "professional", "studio"]
+  .map((id) => PLANS[id])
+  .filter(Boolean);
+
 export default function LandingPage() {
   return (
     <>
@@ -74,22 +84,31 @@ export default function LandingPage() {
           Build with greater confidence.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/register">
+          <TrackedCta href="/register" event="cta_check_project" className="inline-block">
             <Button size="lg">Check a Project <ArrowRight className="h-4 w-4" /></Button>
-          </Link>
-          <Link href="/code">
-            <Button size="lg" variant="outline">Explore Ghana Building Code</Button>
-          </Link>
+          </TrackedCta>
+          <TrackedCta href="/demo" event="cta_book_demo" className="inline-block">
+            <Button size="lg" variant="outline">Book a free demo</Button>
+          </TrackedCta>
+          <TrackedCta href="/code" event="cta_explore_code" className="inline-block">
+            <Button size="lg" variant="ghost">Explore Ghana Building Code</Button>
+          </TrackedCta>
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
           Preliminary compliance intelligence — not a legal determination or permit approval.
         </p>
+
+        <div className="mx-auto mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> 27,000+ requirements searchable</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Source-backed citations</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Free to start</span>
+        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f) => (
-            <Link key={f.title} href={f.href}>
+            <TrackedCta key={f.title} href={f.href} event="cta_feature" props={{ feature: f.title }}>
               <Card className="h-full transition-shadow hover:shadow-md">
                 <CardHeader>
                   <f.icon className="mb-2 h-7 w-7 text-primary" />
@@ -99,7 +118,7 @@ export default function LandingPage() {
                   <p className="text-sm text-muted-foreground">{f.body}</p>
                 </CardContent>
               </Card>
-            </Link>
+            </TrackedCta>
           ))}
         </div>
       </section>
@@ -120,7 +139,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="mb-8 text-center">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Simple, local pricing</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            Pay in Ghana cedis via mobile money or card. Start free — upgrade when your projects do.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {pricing.map((p) => (
+            <Card key={p.id} className={p.id === "professional" ? "border-primary/40 shadow-md" : ""}>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>{p.name}</CardTitle>
+                  {p.id === "professional" && <Sparkles className="h-4 w-4 text-primary" />}
+                </div>
+                <p className="text-sm text-muted-foreground">{p.tagline}</p>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{p.ghsMonthly}<span className="text-sm font-normal text-muted-foreground"> /mo</span></p>
+                <ul className="mt-4 space-y-2">
+                  {p.features.slice(0, 4).map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <TrackedCta
+                  href="/register"
+                  event="cta_pricing"
+                  props={{ plan: p.id }}
+                  className="mt-5 inline-block w-full"
+                >
+                  <Button className="w-full" variant={p.id === "professional" ? "default" : "outline"}>
+                    {p.id === "free" ? "Start free" : `Get ${p.name}`}
+                  </Button>
+                </TrackedCta>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Need SSO, unlimited usage or a dedicated deployment?{" "}
+          <Link href="/demo" className="font-medium text-primary hover:underline">Talk to us about Enterprise →</Link>
+        </p>
+      </section>
+
+      <section className="mx-auto mb-20 max-w-6xl px-6">
         <div className="rounded-2xl bg-sidebar px-8 py-12 text-center text-sidebar-foreground">
           <h2 className="text-2xl font-bold text-white sm:text-3xl">
             From fragmented regulations to a structured compliance system.
@@ -129,9 +194,23 @@ export default function LandingPage() {
             Searchable, explainable, project-aware digital compliance for architects,
             engineers, developers, fire-safety professionals and building control.
           </p>
-          <Link href="/register" className="mt-7 inline-block">
+          <TrackedCta href="/register" event="cta_start_free" className="mt-7 inline-block">
             <Button size="lg" className="bg-white text-slate-900 hover:opacity-90">Start free</Button>
-          </Link>
+          </TrackedCta>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-card">
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <div className="flex flex-col items-center gap-6 text-center md:flex-row md:justify-between md:text-left">
+            <div className="max-w-md">
+              <h2 className="text-xl font-bold">Ghana building-compliance updates</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                New regulatory guidance, permit changes and practical articles — a few times a month, no spam.
+              </p>
+            </div>
+            <NewsletterForm />
+          </div>
         </div>
       </section>
     </>

@@ -7,7 +7,7 @@ import { saveLead } from "@/lib/voice/lead-capture";const postSchema = z.object(
   email: z.string().min(3).max(255),
   phone: z.string().min(1).max(40).optional(),
   organization: z.string().min(1).max(160).optional(),
-  source: z.enum(["marketing_form", "voice_browser", "voice_phone"]),
+  source: z.enum(["marketing_form", "voice_browser", "voice_phone", "newsletter"]),
   channel: z.enum(["web", "voice", "phone"]),
   interest: z.string().min(1).max(100).optional(),
   message: z.string().max(2000).optional(),
