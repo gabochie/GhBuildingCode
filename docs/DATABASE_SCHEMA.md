@@ -89,6 +89,13 @@ PostgreSQL-ready: every table maps 1:1; `TEXT PRIMARY KEY` UUIDs keep portabilit
 - `blog_posts` (id, slug UNIQUE, title, excerpt, body, cover_image, category,
   tags, status[draft|published|archived], author_name, author_bio, meta_description,
   author_user_id, published_at, created_at, updated_at)
+- `payments` (id, user_id, reference UNIQUE, plan, currency, amount_major,
+  amount_minor, gateway[moolre|expresspay|manual], gateway_ref, status
+  [pending|paid|failed|cancelled], created_at, updated_at) — online Ghana payments
+- `subscriptions` (id, user_id, plan, status[active], payment_id?, gateway,
+  current_period_start, current_period_end, created_at, updated_at) — one payment
+  activates a plan for one billing period; admin renews/extends. A paid `users.plan`
+  is honored only while an active, non-expired subscription backs it.
 
 ### FTS (SQLite virtual tables)
 - `requirements_fts` (content-optimized over requirement text)

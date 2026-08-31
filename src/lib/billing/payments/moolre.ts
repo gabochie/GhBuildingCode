@@ -16,8 +16,11 @@ import type { PaymentStatus } from "./gateway";
 export class MoolreGateway implements PaymentGateway {
   id = "moolre" as const;
   webhookPath = "/api/v1/billing/webhooks/moolre";
+  private cfg: MoolreConfig;
 
-  constructor(private cfg: MoolreConfig = moolreConfig()!) {}
+  constructor(cfg: MoolreConfig = moolreConfig()!) {
+    this.cfg = cfg;
+  }
 
   isEnabled(): boolean {
     return !!this.cfg && this.cfg.enabled;
