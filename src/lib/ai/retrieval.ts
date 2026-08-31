@@ -177,6 +177,23 @@ export async function searchDefinitions(term: string): Promise<Array<{ term: str
   const t = tokenize(term);
   if (!t.length) return [];
 
+  // FTS5 first, with LIKE fallback for consistency.
+  const ftsQuery = t.join(" AND ");
+  try {
+    const hits = (await db
+      .prepare(
+        `SELECT d.term, d.definition, d.page
+         FROM definitions_fts
+         JOIN definitions d ON d.id = 'def-' || definitions_fts.rowid
+         WHERE definitions_fts MATCH ?
+         ORDER BY bm25(definitions_fts) ASC LIMIT 8`
+      )
+      .all(ftsQuery)) as Array<{ term: string; definition: string; page: number }>;
+    if (hits.length) return hits;
+  } catch {
+    // fall through to LIKE
+  }
+
   const likeClauses: string[] = [];
   const likeParams: unknown[] = [];
   for (const x of t) {
