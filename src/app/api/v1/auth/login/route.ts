@@ -1,23 +1,15 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { getDb, uid, now } from "@/lib/db";
+import { getDb, uid } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { signSession } from "@/lib/auth/tokens";
-import { badRequest, handleError, unauthorized, tooManyRequests } from "@/lib/api";
+import { ok, badRequest, handleError, unauthorized, tooManyRequests, clientIp } from "@/lib/api";
 import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const bodySchema = z.object({
   email: z.string().min(3).max(255),
   password: z.string().min(1)
 });
-
-function clientIp(req: Request): string {
-  return (
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
-}
 
 export async function POST(req: Request) {
   try {
@@ -57,17 +49,7 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 7
     });
 
-    return Response.json(
-      {
-        request_id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        status: "ok",
-        data: { user: { id: user.id, email: user.email, name: user.name, role: user.role, plan: user.plan } },
-        warnings: [],
-        sources: []
-      },
-      { status: 200 }
-    );
+    return ok({ user: { id: user.id, email: user.email, name: user.name, role: user.role, plan: user.plan } });
   } catch (e) {
     return handleError(e);
   }

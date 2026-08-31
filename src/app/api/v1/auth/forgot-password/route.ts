@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { ok, badRequest, handleError, tooManyRequests } from "@/lib/api";
+import { ok, badRequest, handleError, tooManyRequests, clientIp } from "@/lib/api";
 import { randomBytes } from "node:crypto";
 import { sendEmail, passwordResetEmailHtml } from "@/lib/email";
 import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
@@ -9,14 +9,6 @@ const schema = z.object({ email: z.string().min(3).max(255) });
 
 function generateToken(): string {
   return randomBytes(32).toString("hex");
-}
-
-function clientIp(req: Request): string {
-  return (
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
 }
 
 export async function POST(req: Request) {

@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { bucketStart, rateLimitConfig } from "./rate-limit-policy";
 
 /**
  * Distributed fixed-window rate limiter backed by D1 (or better-sqlite3 in
@@ -22,32 +23,17 @@ export interface RateLimitResult {
   retryAfter: number;
 }
 
-export interface RateLimitConfig {
-  limit: number;
-  windowMs: number;
-}
-
-const NAMED_LIMITS: Record<string, RateLimitConfig> = {
-  login: { limit: 10, windowMs: 60_000 }, // 10 login attempts / minute
-  register: { limit: 5, windowMs: 3_600_000 }, // 5 registrations / hour
-  forgot: { limit: 5, windowMs: 900_000 }, // 5 password-reset requests / 15 min
-  ask: { limit: 30, windowMs: 60_000 }, // 30 AI questions / minute (defense in depth)
-  email: { limit: 10, windowMs: 3_600_000 } // generic email-triggering action / hour
-};
-
-export function bucketStart(nowMs: number, windowMs: number): number {
-  return Math.floor(nowMs / windowMs) * windowMs;
-}
+export { bucketStart };
 
 /**
  * Attempt to consume one unit from a named limit keyed by `key`.
  * Returns whether the request is allowed, along with window metadata.
  */
 export async function rateLimit(
-  name: keyof typeof NAMED_LIMITS | string,
+  name: keyof typeof import("./rate-limit-policy").NAMED_LIMITS | string,
   key: string
 ): Promise<RateLimitResult> {
-  const cfg = NAMED_LIMITS[name] ?? NAMED_LIMITS.login;
+  const cfg = rateLimitConfig(name);
   const db = await getDb();
   const nowMs = Date.now();
   const start = bucketStart(nowMs, cfg.windowMs);

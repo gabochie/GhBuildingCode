@@ -1,13 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
-async function clearSession() {
-  (await cookies()).delete("ghbc_session");
-}
+import { ok } from "@/lib/api";
 
 export async function POST() {
-  clearSession();
-  return NextResponse.json({ ok: true });
+  (await cookies()).delete("ghbc_session");
+  return ok({ logged_out: true });
 }
 
 export async function GET() {
