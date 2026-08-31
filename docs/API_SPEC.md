@@ -20,9 +20,9 @@ Every response:
 ## Endpoints
 
 ### Auth
-- `POST /api/v1/auth/register` — {email, password, name}
+- `POST /api/v1/auth/register` — {email, password, name}; password must be 8–128 chars with lowercase + uppercase + number + special char
 - `POST /api/v1/auth/login` — {email, password} → sets httpOnly cookie
-- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/logout` — clears session cookie (POST only, CSRF-safe)
 - `GET /api/v1/auth/me` — current user + memberships
 
 ### Projects
@@ -93,6 +93,26 @@ Every response:
 - Web: httpOnly JWT cookie.
 - Public/agent API: `Authorization: Bearer <api_key>` → `api_keys` table, usage events logged.
 - Rate limiting per key/user.
+
+## Rate limiting
+Sensitive/expensive endpoints are rate-limited with a distributed D1-backed
+fixed-window limiter. When the limit is hit, the API returns `429` with the
+envelope error code `RATE_LIMITED` plus `Retry-After`, `X-RateLimit-Limit` and
+`X-RateLimit-Remaining` headers.
+
+| Endpoint               | Window   | Limit |
+|------------------------|----------|-------|
+| `POST /auth/login`     | 1 min    | 10    |
+| `POST /auth/register`  | 1 hour   | 5     |
+| `POST /auth/forgot-password` | 15 min | 5 (per IP) + 10/hour (per email) |
+| `POST /ai/ask`         | 1 min    | 30 (per user) |
+
+## Caching
+Stable public reference endpoints (regulations, parts, occupancies,
+requirements/{id}, authorities/{id}) return CDN-friendly `Cache-Control`
+headers (`s-maxage`) so Cloudflare can serve them without hitting D1. The
+published blog listing/post cache briefly (60s) with `stale-while-revalidate`.
+Auth-dependent and search endpoints are not cached.
 
 ## Capability list (S24)
 get_applicable_requirements, classify_occupancy, check_fire_requirements,

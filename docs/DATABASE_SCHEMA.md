@@ -79,6 +79,16 @@ PostgreSQL-ready: every table maps 1:1; `TEXT PRIMARY KEY` UUIDs keep portabilit
   request_id, created_at)
 - `audit_logs` (id, user_id?, action, entity_type, entity_id, details_json, ip, created_at)
 - `search_stats` (id, query, hits, source, created_at)
+- `feature_usage` (PK user_id+feature+period, count, updated_at) — monthly plan quotas
+- `rate_limits` (PK key+window_start, count) — distributed fixed-window rate limiting
+- `upgrade_leads` (id, user_id?, email, name, organization, phone, requested_plan, message, status, created_at)
+- `leads` (id, user_id?, name, email, phone, organization, source, channel, interest, message, status, notes, created_at)
+- `password_resets` (id, user_id, token UNIQUE, expires_at, used, created_at)
+
+### Billing & content
+- `blog_posts` (id, slug UNIQUE, title, excerpt, body, cover_image, category,
+  tags, status[draft|published|archived], author_name, author_bio, meta_description,
+  author_user_id, published_at, created_at, updated_at)
 
 ### FTS (SQLite virtual tables)
 - `requirements_fts` (content-optimized over requirement text)
