@@ -1,8 +1,9 @@
 import { getDb, now } from "@/lib/db";
-import { planPrice, addMonthsIso, isExpired, monthlyPeriod } from "./price";
+import { planPrice, addMonthsIso, isExpired, isInGracePeriod, monthlyPeriod, periodMonths, ANNUAL_MONTHS, ANNUAL_BILLED_MONTHS, type BillingPeriod } from "./price";
+import { isUserInGracePeriod } from "./subscriptions";
 
-export type { PlanPrice } from "./price";
-export { planPrice, addMonthsIso, isExpired, monthlyPeriod };
+export type { PlanPrice, BillingPeriod } from "./price";
+export { planPrice, addMonthsIso, isExpired, isInGracePeriod, monthlyPeriod, periodMonths, ANNUAL_MONTHS, ANNUAL_BILLED_MONTHS } from "./price";
 
 export type FeatureKey =
   | "projects"
@@ -29,6 +30,8 @@ export interface Plan {
   monthly: string;
   /** Local (Ghana) monthly price in GHS, charged via Ghanaian gateways. */
   ghsMonthly: string;
+  /** Local (Ghana) annual price in GHS (10 months billed, 2 free). */
+  ghsAnnual: string;
   limits: PlanLimits;
   features: string[];
   leadGen?: boolean;
@@ -42,6 +45,7 @@ export const PLANS: Record<string, Plan> = {
     tagline: "Try GHBC",
     monthly: "US$0",
     ghsMonthly: "GH₵0",
+    ghsAnnual: "GH₵0",
     limits: {
       projects: 1,
       aiQuestionsPerMonth: 5,
@@ -67,6 +71,7 @@ export const PLANS: Record<string, Plan> = {
     tagline: "For architects and consultants",
     monthly: "US$29",
     ghsMonthly: "GH₵399",
+    ghsAnnual: "GH₵3,990",
     limits: {
       projects: 10,
       aiQuestionsPerMonth: 100,
@@ -92,6 +97,7 @@ export const PLANS: Record<string, Plan> = {
     tagline: "For practices",
     monthly: "US$99",
     ghsMonthly: "GH₵1,299",
+    ghsAnnual: "GH₵12,990",
     limits: {
       projects: 50,
       aiQuestionsPerMonth: 500,
@@ -116,6 +122,7 @@ export const PLANS: Record<string, Plan> = {
     tagline: "For developers, banks, insurers and government",
     monthly: "Custom",
     ghsMonthly: "Custom",
+    ghsAnnual: "Custom",
     limits: {
       projects: Infinity,
       aiQuestionsPerMonth: Infinity,
@@ -181,6 +188,8 @@ export interface LimitCheck {
   used: number;
   limit: number;
   plan: Plan;
+  /** True when the user is in the post-expiry grace period (read-only). */
+  gracePeriod: boolean;
 }
 
 export async function checkLimit(userId: string, planId: string, feature: FeatureKey): Promise<LimitCheck> {
@@ -188,7 +197,9 @@ export async function checkLimit(userId: string, planId: string, feature: Featur
   const usage = await getUsage(userId);
   const used = usage[USAGE_FIELD[feature]];
   const limit = plan.limits[feature];
-  return { allowed: used < limit, feature, used, limit, plan };
+  const gracePeriod = await isUserInGracePeriod(userId);
+  if (gracePeriod) return { allowed: false, feature, used, limit: 0, plan, gracePeriod: true };
+  return { allowed: used < limit, feature, used, limit, plan, gracePeriod: false };
 }
 
 export async function incrementUsage(userId: string, feature: string, period: string = monthlyPeriod()): Promise<void> {
@@ -205,6 +216,8 @@ export interface QuotaResult {
   used: number;
   limit: number;
   plan: Plan;
+  /** True when the user is in the post-expiry grace period (read-only). */
+  gracePeriod: boolean;
 }
 
 /**
@@ -212,6 +225,9 @@ export interface QuotaResult {
  * `checkLimit` + `incrementUsage` pair, this is a single conditional
  * `UPDATE ... WHERE count < limit` that cannot overshoot the limit under
  * concurrent requests (avoids the double-charge race).
+ *
+ * During the 3-day grace period after subscription expiry, all quota
+ * consumption is blocked (returns `allowed: false`, `gracePeriod: true`).
  *
  * Returns `allowed: false` and the current usage when the limit is met.
  */
@@ -221,9 +237,18 @@ export async function consumeQuota(userId: string, planId: string, feature: Feat
   const db = await getDb();
   const period = monthlyPeriod();
 
+  // Grace period: block all mutating actions but allow dashboard + read access.
+  const gracePeriod = await isUserInGracePeriod(userId);
+  if (gracePeriod) {
+    const used = ((await db.prepare(
+      "SELECT COALESCE(SUM(count), 0) c FROM feature_usage WHERE user_id = ? AND feature = ? AND period = ?"
+    ).get(userId, feature, period)) as { c: number }).c;
+    return { allowed: false, feature, used, limit: 0, plan, gracePeriod: true };
+  }
+
   if (limit === Infinity) {
     await incrementUsage(userId, feature, period);
-    return { allowed: true, feature, used: Infinity, limit, plan };
+    return { allowed: true, feature, used: Infinity, limit, plan, gracePeriod: false };
   }
 
   const result = await db.prepare(
@@ -236,8 +261,8 @@ export async function consumeQuota(userId: string, planId: string, feature: Feat
     const used = ((await db.prepare(
       "SELECT COALESCE(SUM(count), 0) c FROM feature_usage WHERE user_id = ? AND feature = ? AND period = ?"
     ).get(userId, feature, period)) as { c: number }).c;
-    return { allowed: false, feature, used, limit, plan };
+    return { allowed: false, feature, used, limit, plan, gracePeriod: false };
   }
 
-  return { allowed: true, feature, used: limit, limit, plan };
+  return { allowed: true, feature, used: limit, limit, plan, gracePeriod: false };
 }

@@ -1,4 +1,5 @@
 import { getDb, now, uid } from "@/lib/db";
+import { GRACE_PERIOD_DAYS } from "./price";
 
 interface SubscriptionRow {
   id: string;
@@ -18,18 +19,24 @@ export interface RenewalRunResult {
 }
 
 /**
- * Mark subscriptions past their current period as expired so the effective-plan
- * resolution falls back to Free. Idempotent: the guarded UPDATE only touches
- * rows still `active`, so re-runs never double-expire or resurrect anything.
+ * Mark subscriptions past their current period (and grace window) as expired
+ * so the effective-plan resolution falls back to Free. Idempotent: the guarded
+ * UPDATE only touches rows still `active`, so re-runs never double-expire or
+ * resurrect anything.
+ *
+ * Subscriptions within the 3-day grace period after expiry are left active so
+ * `effectivePlan` retains the paid plan (login + read-only dashboard).
  *
  * Returns the number of subscriptions transitioned to `expired`.
  */
 export async function expireLapsedSubscriptions(): Promise<number> {
   const db = await getDb();
   const nowIso = now();
+  // Only expire subs whose period ended more than GRACE_PERIOD_DAYS ago.
+  const graceCutoff = new Date(Date.now() - GRACE_PERIOD_DAYS * 86400000).toISOString();
   const lapsed = (await db
     .prepare("SELECT * FROM subscriptions WHERE status = 'active' AND current_period_end <= ? ORDER BY current_period_end")
-    .all(nowIso)) as unknown as SubscriptionRow[];
+    .all(graceCutoff)) as unknown as SubscriptionRow[];
 
   let expired = 0;
   for (const s of lapsed) {

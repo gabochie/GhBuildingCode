@@ -47,7 +47,16 @@ export function notFound(message = "Not found") {
   return NextResponse.json(envelope("error", { error: message }), { status: 404 });
 }
 
-export function limitReached(feature: string, used: number, limit: number, planId: string, message?: string) {
+export function limitReached(feature: string, used: number, limit: number, planId: string, message?: string, gracePeriod?: boolean) {
+  if (gracePeriod) {
+    return NextResponse.json(
+      envelope("error", {
+        error: "Your subscription has expired. Renew to continue creating projects, running AI, and compliance checks.",
+        code: "GRACE_PERIOD"
+      }),
+      { status: 402 }
+    );
+  }
   const plan = getPlan(planId);
   return NextResponse.json(
     envelope("error", {

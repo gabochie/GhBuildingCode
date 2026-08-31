@@ -1,5 +1,5 @@
 import { getDb, now, uid } from "@/lib/db";
-import { planPrice } from "@/lib/billing/plans";
+import { planPrice, type BillingPeriod } from "@/lib/billing/plans";
 import { gatewayById } from "./registry";
 import type { PaymentStatus } from "./gateway";
 import { activateSubscription } from "@/lib/billing/subscriptions";
@@ -14,6 +14,8 @@ export interface CreatePaymentInput {
   gateway: string;
   baseUrl: string;
   description?: string;
+  /** Months the plan will be active for once paid (1=monthly, 12=annual). */
+  months?: number;
 }
 
 export interface CreatePaymentResult {
@@ -33,13 +35,15 @@ export async function createPayment(input: CreatePaymentInput): Promise<CreatePa
   if (!gw) throw new Error("UNKNOWN_GATEWAY");
   if (!gw.isEnabled()) throw new Error("GATEWAY_NOT_CONFIGURED");
 
-  const price = planPrice(input.plan);
+  const months = Math.max(1, input.months ?? 1);
+  const period: BillingPeriod = months >= 12 ? "annual" : "monthly";
+  const price = planPrice(input.plan, period);
   if (!price) throw new Error("PLAN_NOT_PAYABLE");
 
   const db = await getDb();
   const reference = `${uid("pay").replace("pay_", "")}`;
   const paymentId = uid("pay");
-  const description = input.description ?? `GHBC ${input.plan} subscription`;
+  const description = input.description ?? `GHBC ${input.plan} subscription (${period})`;
   const callbackPath = gw.webhookPath;
   const callbackUrl = new URL(callbackPath, input.baseUrl).toString();
   const redirectUrl = new URL("/app/upgrade?status=return", input.baseUrl).toString();
@@ -101,8 +105,8 @@ export async function resolveWebhook(gatewayId: string, req: Request): Promise<{
 
   const db = await getDb();
   const payment = (await db
-    .prepare("SELECT id, user_id, plan, status, gateway_ref FROM payments WHERE reference = ?")
-    .get(event.reference)) as { id: string; user_id: string; plan: string; status: string; gateway_ref: string | null } | undefined;
+    .prepare("SELECT id, user_id, plan, status, gateway_ref, amount_minor FROM payments WHERE reference = ?")
+    .get(event.reference)) as { id: string; user_id: string; plan: string; status: string; gateway_ref: string | null; amount_minor: string } | undefined;
   if (!payment) return { valid: true, event }; // unknown reference — ignore silently
 
   // Authoritative re-query for ExpressPay (pending->paid). Moolre event already
@@ -117,12 +121,18 @@ export async function resolveWebhook(gatewayId: string, req: Request): Promise<{
 
   // Idempotency: only transition once.
   if (payment.status === "pending" && status === "paid") {
+    // Derive the billing period from the stored amount: if it matches the
+    // plan's annual price the user paid for 12 months, otherwise 1 month.
+    // This requires no schema change and works for existing payment rows.
+    const annualPrice = planPrice(payment.plan, "annual");
+    const months = annualPrice && annualPrice.amountMinor === payment.amount_minor ? 12 : 1;
     await activateSubscription({
       userId: payment.user_id,
       plan: payment.plan,
       paymentId: payment.id,
       gateway: gatewayId,
-      fromIso: now()
+      fromIso: now(),
+      months
     });
     await db.prepare("UPDATE payments SET status = 'paid', gateway_ref = ?, updated_at = ? WHERE id = ?").run(event.gatewayRef ?? payment.gateway_ref, now(), payment.id);
   } else if (payment.status === "pending" && (status === "failed" || status === "cancelled")) {

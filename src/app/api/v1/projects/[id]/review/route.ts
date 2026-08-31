@@ -15,7 +15,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     if (project.user_id !== session.sub) return forbidden();
 
     const chk = await consumeQuota(session.sub, session.plan, "complianceChecksPerMonth");
-    if (!chk.allowed) return limitReached("compliance checks", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("compliance checks", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
 
     const result = await runComplianceCheck(project);
     return ok(result);

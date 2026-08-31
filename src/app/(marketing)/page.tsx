@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { TrackedCta } from "@/components/tracked-cta";
 import { NewsletterForm } from "@/components/newsletter-form";
-import { PLANS } from "@/lib/billing/plans";
+import PricingSection from "@/components/pricing-section";
 import {
   MessageSquareText,
   ShieldCheck,
@@ -14,8 +14,7 @@ import {
   Building2,
   ScrollText,
   Workflow,
-  Check,
-  Sparkles
+  Check
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -62,11 +61,6 @@ const modules = [
   { icon: Landmark, title: "Ghana Permit Intelligence", body: "Authority-specific permit requirements, checklists and process." },
   { icon: ScrollText, title: "Regulatory Source Library", body: "Structured, versioned, editorial-controlled regulatory knowledge." }
 ];
-
-// Public pricing preview — matches src/lib/billing/plans.ts (GHS local pricing).
-const pricing = ["free", "professional", "studio"]
-  .map((id) => PLANS[id])
-  .filter(Boolean);
 
 export default function LandingPage() {
   return (
@@ -146,39 +140,7 @@ export default function LandingPage() {
             Pay in Ghana cedis via mobile money or card. Start free — upgrade when your projects do.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {pricing.map((p) => (
-            <Card key={p.id} className={p.id === "professional" ? "border-primary/40 shadow-md" : ""}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <CardTitle>{p.name}</CardTitle>
-                  {p.id === "professional" && <Sparkles className="h-4 w-4 text-primary" />}
-                </div>
-                <p className="text-sm text-muted-foreground">{p.tagline}</p>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{p.ghsMonthly}<span className="text-sm font-normal text-muted-foreground"> /mo</span></p>
-                <ul className="mt-4 space-y-2">
-                  {p.features.slice(0, 4).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <TrackedCta
-                  href="/register"
-                  event="cta_pricing"
-                  props={{ plan: p.id }}
-                  className="mt-5 inline-block w-full"
-                >
-                  <Button className="w-full" variant={p.id === "professional" ? "default" : "outline"}>
-                    {p.id === "free" ? "Start free" : `Get ${p.name}`}
-                  </Button>
-                </TrackedCta>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <PricingSection />
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Need SSO, unlimited usage or a dedicated deployment?{" "}
           <Link href="/demo" className="font-medium text-primary hover:underline">Talk to us about Enterprise →</Link>
