@@ -15,7 +15,7 @@ export default async function AuthoritiesPage() {
     .all()) as Array<Record<string, unknown>>;
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-10">
+    <div className="container mx-auto max-w-6xl">
       <PageHeader
         title="Reviewing Authorities"
         description="The agencies involved in building approval, permits and inspections in Ghana."

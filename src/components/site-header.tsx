@@ -3,10 +3,7 @@ import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
-  { href: "/code", label: "Code Explorer" },
-  { href: "/compliance", label: "Compliance" },
-  { href: "/authorities", label: "Authorities" },
-  { href: "/copilot", label: "AI Copilot" }
+  { href: "/blog", label: "Blog" }
 ];
 
 export function SiteHeader() {

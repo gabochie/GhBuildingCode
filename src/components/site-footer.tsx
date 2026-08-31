@@ -6,22 +6,15 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
     title: "Product",
     links: [
       { href: "/register", label: "Check a Project" },
-      { href: "/code", label: "Code Explorer" },
-      { href: "/compliance", label: "Compliance Check" },
-      { href: "/permit", label: "Permit Readiness" },
-      { href: "/copilot", label: "AI Copilot" },
-      { href: "/demo", label: "Book a Demo" }
+      { href: "/demo", label: "Book a Demo" },
+      { href: "/login", label: "Sign in" }
     ]
   },
   {
     title: "Resources",
     links: [
-      { href: "/authorities", label: "Reviewing Authorities" },
-      { href: "/documents", label: "Document Review" },
-      { href: "/reports", label: "Compliance Reports" },
       { href: "/blog", label: "Blog" },
-      { href: "/blog/feed.xml", label: "RSS Feed" },
-      { href: "/api", label: "API & Developers" }
+      { href: "/blog/feed.xml", label: "RSS Feed" }
     ]
   },
   {
