@@ -23,9 +23,36 @@ export interface Plan {
   name: string;
   tagline: string;
   monthly: string;
+  /** Local (Ghana) monthly price in GHS, charged via Ghanaian gateways. */
+  ghsMonthly: string;
   limits: PlanLimits;
   features: string[];
   leadGen?: boolean;
+}
+
+export interface PlanPrice {
+  currency: "GHS";
+  /** Numeric minor-currency value (pesewas) for exact gateway amounts. */
+  amountMinor: string;
+  label: string;
+}
+
+/**
+ * Parse a GHS price string ("GH₵399") into a minor-currency (pesewa) amount.
+ * Numeric, integer-consistent with gateway APIs that expect plain decimals.
+ */
+function ghsToMinor(ghs: string): string {
+  const cleaned = ghs.replace(/[^\d.]/g, "");
+  const num = parseFloat(cleaned);
+  const major = Math.round(num);
+  return String(major);
+}
+
+/** Resolve the GHS price for a plan. Free plans are never chargeable. */
+export function planPrice(planId: string): PlanPrice | null {
+  const plan = getPlan(planId);
+  if (planId === "free" || !plan.ghsMonthly || plan.ghsMonthly.toUpperCase().includes("CUSTOM")) return null;
+  return { currency: "GHS", amountMinor: ghsToMinor(plan.ghsMonthly), label: plan.ghsMonthly };
 }
 
 export const PLANS: Record<string, Plan> = {
@@ -35,6 +62,7 @@ export const PLANS: Record<string, Plan> = {
     name: "Free",
     tagline: "Try GHBC",
     monthly: "US$0",
+    ghsMonthly: "GH₵0",
     limits: {
       projects: 1,
       aiQuestionsPerMonth: 5,
@@ -59,6 +87,7 @@ export const PLANS: Record<string, Plan> = {
     name: "Professional",
     tagline: "For architects and consultants",
     monthly: "US$29",
+    ghsMonthly: "GH₵399",
     limits: {
       projects: 10,
       aiQuestionsPerMonth: 100,
@@ -83,6 +112,7 @@ export const PLANS: Record<string, Plan> = {
     name: "Studio",
     tagline: "For practices",
     monthly: "US$99",
+    ghsMonthly: "GH₵1,299",
     limits: {
       projects: 50,
       aiQuestionsPerMonth: 500,
@@ -106,6 +136,7 @@ export const PLANS: Record<string, Plan> = {
     name: "Enterprise",
     tagline: "For developers, banks, insurers and government",
     monthly: "Custom",
+    ghsMonthly: "Custom",
     limits: {
       projects: Infinity,
       aiQuestionsPerMonth: Infinity,
@@ -134,6 +165,23 @@ export function getPlan(planId?: string | null): Plan {
 
 export function monthlyPeriod(d: Date = new Date()): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Add a number of months to a date and return an ISO timestamp marking the
+ * end of the paid billing period. Used to compute subscription expiry.
+ */
+export function addMonthsIso(fromIso: string | null | undefined, months: number): string {
+  const base = fromIso ? new Date(fromIso) : new Date();
+  const d = new Date(base);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  return d.toISOString();
+}
+
+/** True when the subscription has lapsed (expired relative to now). */
+export function isExpired(expiresAtIso: string | null | undefined, nowIso: string = new Date().toISOString()): boolean {
+  if (!expiresAtIso) return true;
+  return new Date(expiresAtIso).getTime() <= new Date(nowIso).getTime();
 }
 
 export interface UsageCounts {
