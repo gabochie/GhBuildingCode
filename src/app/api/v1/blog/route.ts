@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
+import { ok, badRequest, requireAdmin, handleError, withCache } from "@/lib/api";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 120);
@@ -47,7 +47,13 @@ export async function GET(req: Request) {
     params.push(String(limit));
 
     const posts = await db.prepare(query).all(...params);
-    return ok({ posts });
+    // Only the default public published listing is CDN-cacheable; admin/draft
+    // views must never be cached.
+    const res = ok({ posts });
+    if (!status && !category) {
+      return withCache(res, { seconds: 60, sMaxAge: 60, stale: 600 });
+    }
+    return res;
   } catch (e) {
     return handleError(e);
   }

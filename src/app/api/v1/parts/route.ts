@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { ok, handleError } from "@/lib/api";
+import { ok, handleError, withCache } from "@/lib/api";
 
 export async function GET() {
   try {
@@ -7,7 +7,7 @@ export async function GET() {
     const parts = (await db
       .prepare("SELECT part_no, title FROM parts ORDER BY part_no")
       .all()) as Array<{ part_no: number; title: string }>;
-    return ok({ parts, count: parts.length });
+    return withCache(ok({ parts, count: parts.length }));
   } catch (e) {
     return handleError(e);
   }
