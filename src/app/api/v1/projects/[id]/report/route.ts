@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (project.user_id !== session.sub) return forbidden();
 
     const chk = await consumeQuota(session.sub, session.plan, "reportsPerMonth");
-    if (!chk.allowed) return limitReached("PDF reports", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("PDF reports", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
 
     const pdf = await generateCompliancePdf(id, session.sub);
     return new Response(new Uint8Array(pdf), {

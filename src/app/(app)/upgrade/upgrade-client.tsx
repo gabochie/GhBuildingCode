@@ -21,21 +21,24 @@ const PLANS = [
   {
     id: "professional",
     name: "Professional",
-    monthly: "GH₵399 / mo",
     tagline: "For architects and consultants",
+    monthly: "GH₵399 / mo",
+    annual: "GH₵3,990 / yr",
     features: ["Multiple projects (10)", "AI copilot with project context", "Compliance reviews", "Document uploads", "PDF compliance reports", "Project history"]
   },
   {
     id: "studio",
     name: "Studio",
-    monthly: "GH₵1,299 / mo",
     tagline: "For practices",
+    monthly: "GH₵1,299 / mo",
+    annual: "GH₵12,990 / yr",
     features: ["Everything in Professional", "Advanced compliance", "Authority intelligence", "API access (3 keys)", "Project templates"]
   }
 ];
 
 export default function UpgradeClient({ currentPlan, email }: { currentPlan: string; email: string }) {
   const [plan, setPlan] = useState(currentPlan === "free" ? "professional" : (currentPlan === "professional" || currentPlan === "studio" ? currentPlan : "professional"));
+  const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
   const [phone, setPhone] = useState("");
   const [gateway, setGateway] = useState<GatewayInfo | null>(null);
   const [gateways, setGateways] = useState<GatewayInfo[]>([]);
@@ -115,7 +118,7 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
       const res = await fetch("/api/v1/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, gateway: gateway.id, phone })
+        body: JSON.stringify({ plan, gateway: gateway.id, phone, billingPeriod: period })
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.data?.error || "Checkout failed.");
@@ -158,7 +161,8 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
               </div>
               <h3 className="mt-2 text-lg font-bold">{p.name}</h3>
               <p className="text-sm text-muted-foreground">{p.tagline}</p>
-              <p className="mt-2 text-2xl font-extrabold">{p.monthly}</p>
+              <p className="mt-2 text-2xl font-extrabold">{period === "annual" ? p.annual : p.monthly}</p>
+              {period === "annual" ? <p className="text-xs font-medium text-primary">2 months free</p> : null}
               <ul className="mt-4 space-y-2">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -172,7 +176,22 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
         })}
       </div>
 
-      <Card className="mt-8">
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className={`text-sm font-medium ${period === "monthly" ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={period === "annual"}
+          onClick={() => setPeriod(period === "monthly" ? "annual" : "monthly")}
+          className={`relative h-6 w-11 rounded-full transition-colors ${period === "annual" ? "bg-primary" : "bg-muted"}`}
+        >
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${period === "annual" ? "translate-x-5" : "translate-x-0.5"}`} />
+        </button>
+        <span className={`text-sm font-medium ${period === "annual" ? "text-foreground" : "text-muted-foreground"}`}>Annual</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">2 months free</span>
+      </div>
+
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>Pay online (Ghana)</CardTitle>
           <CardDescription>
@@ -185,7 +204,7 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
               <Label htmlFor="plan">Plan</Label>
               <Select id="plan" value={plan} onChange={(e) => setPlan(e.target.value)}>
                 {PLANS.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} — {p.monthly}</option>
+                  <option key={p.id} value={p.id}>{p.name} — {period === "annual" ? p.annual : p.monthly}</option>
                 ))}
               </Select>
             </div>
@@ -212,7 +231,7 @@ export default function UpgradeClient({ currentPlan, email }: { currentPlan: str
               {momoMessage && !statusMessage && <p className="mb-3 text-sm text-muted-foreground">{momoMessage}</p>}
               <Button type="submit" disabled={loading || gateways.length === 0}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {pendingRef ? "Waiting for payment…" : loading ? "Starting checkout…" : `Pay ${PLANS.find((p) => p.id === plan)?.monthly.split(" ")[0]} now`}
+                {pendingRef ? "Waiting for payment…" : loading ? "Starting checkout…" : `Pay ${(period === "annual" ? PLANS.find((p) => p.id === plan)?.annual : PLANS.find((p) => p.id === plan)?.monthly.split(" ")[0]) ?? ""} now`}
               </Button>
             </div>
           </form>

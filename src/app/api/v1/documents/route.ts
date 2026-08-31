@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     if (!project) return forbidden("Project not found or not yours.");
 
     const chk = await checkLimit(session.sub, session.plan, "documents");
-    if (!chk.allowed) return limitReached("documents", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("documents", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
 
     const allowed = new Set(["application/pdf", "text/plain", "text/markdown", "application/json", "application/octet-stream"]);
     if (!allowed.has(file.type) && !file.name.match(/\.(pdf|txt|md|json)$/i)) {

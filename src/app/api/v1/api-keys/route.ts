@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     if (!parsed.success) return badRequest("Invalid API key payload.");
     const db = await getDb();
     const chk = await checkLimit(session.sub, session.plan, "apiKeys");
-    if (!chk.allowed) return limitReached("api keys", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("api keys", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
 
     const { key, keyHash } = generateApiKey(parsed.data.name);
     await db.prepare("INSERT INTO api_keys (id, user_id, name, key_hash, scopes_json, status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)").run(

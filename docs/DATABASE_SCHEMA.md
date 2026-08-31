@@ -94,8 +94,12 @@ PostgreSQL-ready: every table maps 1:1; `TEXT PRIMARY KEY` UUIDs keep portabilit
   [pending|paid|failed|cancelled], created_at, updated_at) — online Ghana payments
 - `subscriptions` (id, user_id, plan, status[active], payment_id?, gateway,
   current_period_start, current_period_end, created_at, updated_at) — one payment
-  activates a plan for one billing period; admin renews/extends. A paid `users.plan`
-  is honored only while an active, non-expired subscription backs it.
+  activates a plan for one billing period (1 month monthly / 12 months annual —
+  the paid amount implies the period); admin renews/extends. A paid `users.plan`
+  is honored only while an active subscription backs it. **Grace period:** for 3
+  days after expiry the paid plan is retained so the user can log in and view
+  their dashboard read-only; all quota-consuming actions (create project, run
+  AI/compliance, upload docs, PDF reports) are blocked during grace.
 
 ### FTS (SQLite virtual tables)
 - `requirements_fts` (content-optimized over requirement text)

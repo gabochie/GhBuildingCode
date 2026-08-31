@@ -101,8 +101,13 @@ follow-up payment). Payment records and subscriptions live in D1.
   ```
 - `POST /api/v1/billing/checkout` — initiate a payment. Auth required.
   ```json
-  { "plan": "professional", "gateway": "moolre", "phone": "0244000000" }
+  { "plan": "professional", "gateway": "moolre", "phone": "0244000000", "billingPeriod": "monthly" }
   ```
+  `billingPeriod` is `monthly` (default) or `annual`. **Monthly** charges the
+  plan's monthly GHS price and activates the plan for 1 month. **Annual**
+  charges the annual GHS price (10 months billed, 2 free, e.g. GH₵3,990 for
+  Professional) and activates the plan for 12 months. The stored payment amount
+  determines the period at webhook time, so no schema migration is required.
   → `{ payment_id, reference, gateway, redirectUrl, message }`. For Moolre,
   `redirectUrl` is `null` and `message` asks the user to approve the MoMo
   prompt on their phone; for ExpressPay, `redirectUrl` points to the hosted
@@ -133,8 +138,10 @@ Gateways are enabled only when their env credentials are set (see `.env.example`
   invoked by the Worker's `scheduled` handler via a loopback fetch with the
   shared `x-cron-secret` header (set with `wrangler secret put CRON_SECRET`).
   Rejects any request with a wrong or missing secret. Behaviour:
-  1. **Expires** subscriptions past their `current_period_end`, so the
-     effective-plan resolution falls back to Free (no involuntary re-charging).
+  1. **Expires** subscriptions whose period ended more than the 3-day grace
+     period ago, so the effective-plan resolution falls back to Free (no
+     involuntary re-charging). Subscriptions within the grace window are left
+     `active` so the user can still log in and view their dashboard.
   2. **Flags** subscriptions expiring within 7 days for the admin renewal queue.
   Returns `{ ok, expired, dueForRenewal, remainingActive, at }`.
 - Cron trigger configured in `wrangler.jsonc` (`triggers.crons`), currently

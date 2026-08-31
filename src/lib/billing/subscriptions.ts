@@ -1,5 +1,6 @@
 import { getDb, now, uid } from "@/lib/db";
-import { addMonthsIso, isExpired, getPlan, type Plan } from "./plans";
+import { addMonthsIso, isExpired, isInGracePeriod, getPlan, type Plan } from "./plans";
+export { isInGracePeriod } from "./price";
 
 export interface SubscriptionRow {
   id: string;
@@ -96,6 +97,11 @@ export async function markPaymentStatus(paymentId: string, status: string): Prom
  * Get the effective plan considering a paid subscription's billing period.
  * If the user has a paid plan (non-free) but no active, non-expired
  * subscription to back it, they fall back to Free until renewed.
+ *
+ * During the 3-day grace period after expiry, the paid plan is retained
+ * so the user can still log in and view their dashboard (read-only).
+ * Mutating actions (create project, AI, compliance) are blocked separately
+ * via `isUserInGracePeriod`.
  */
 export async function effectivePlan(userId: string): Promise<Plan> {
   const db = await getDb();
@@ -107,6 +113,24 @@ export async function effectivePlan(userId: string): Promise<Plan> {
     .get(userId)) as SubscriptionRow | null;
   // No paid subscription record at all -> treat as free (canonical states via admin flags)
   if (!sub) return getPlan(user.plan);
-  if (isExpired(sub.current_period_end)) return getPlan("free");
+  if (isExpired(sub.current_period_end)) {
+    // Grace period: keep the paid plan for 3 days so login + dashboard still work.
+    if (isInGracePeriod(sub.current_period_end)) return getPlan(sub.plan);
+    return getPlan("free");
+  }
   return getPlan(sub.plan);
+}
+
+/**
+ * True when the user's most recent active subscription has expired but is
+ * within the 3-day grace period. Call this in consuming routes to block
+ * mutations while allowing read access.
+ */
+export async function isUserInGracePeriod(userId: string): Promise<boolean> {
+  const db = await getDb();
+  const sub = (await db
+    .prepare("SELECT current_period_end FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY current_period_end DESC LIMIT 1")
+    .get(userId)) as { current_period_end: string } | null;
+  if (!sub) return false;
+  return isInGracePeriod(sub.current_period_end);
 }

@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!session) return unauthorized();
   try {
     const chk = await consumeQuota(session.sub, session.plan, "complianceChecksPerMonth");
-    if (!chk.allowed) return limitReached("compliance checks", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("compliance checks", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid compliance check payload.");
     const p = parsed.data;

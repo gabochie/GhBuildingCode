@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     const db = await getDb();
     const chk = await consumeQuota(session.sub, session.plan, "aiQuestionsPerMonth");
-    if (!chk.allowed) return limitReached("AI questions", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("AI questions", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
     let convId = conversation_id;
     if (!convId) {
       convId = uid("conv");

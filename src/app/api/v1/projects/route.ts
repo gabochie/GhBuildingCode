@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     const p = parsed.data;
     const db = await getDb();
     const chk = await checkLimit(session.sub, session.plan, "projects");
-    if (!chk.allowed) return limitReached("projects", chk.used, chk.limit, session.plan);
+    if (!chk.allowed) return limitReached("projects", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
     const id = uid("prj");
     await db.prepare(
       `INSERT INTO projects
