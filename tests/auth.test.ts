@@ -34,15 +34,25 @@ test("validateEmail rejects invalid addresses", () => {
   assert.equal(validateEmail("missing-at-sign.com"), false);
 });
 
-test("validatePasswordStrength accepts passwords >= 8 chars", () => {
-  assert.equal(validatePasswordStrength("12345678"), null);
-  assert.equal(validatePasswordStrength("abcdefghij"), null);
-  assert.equal(validatePasswordStrength("A".repeat(128)), null);
+test("validatePasswordStrength accepts strong passwords", () => {
+  assert.equal(validatePasswordStrength("ValidPass1!"), null);
+  assert.equal(validatePasswordStrength("Str0ng-password-here"), null);
+  assert.equal(validatePasswordStrength("aB3$".repeat(6)), null);
+  const long = "A1!a".repeat(32);
+  assert.equal(validatePasswordStrength(long), null);
+});
+
+test("validatePasswordStrength rejects passwords missing required character classes", () => {
+  assert.match(validatePasswordStrength("12345678")!, /lowercase letter/);
+  assert.match(validatePasswordStrength("abcdefghij")!, /uppercase letter/);
+  assert.match(validatePasswordStrength("ABCDEFGH!")!, /lowercase letter/);
+  assert.match(validatePasswordStrength("Abcdefgh")!, /number/);
+  assert.match(validatePasswordStrength("Abcdefg1")!, /special character/);
 });
 
 test("validatePasswordStrength rejects short passwords", () => {
   assert.match(validatePasswordStrength("short")!, /at least 8/);
-  assert.match(validatePasswordStrength("1234567")!, /at least 8/);
+  assert.match(validatePasswordStrength("A1!a")!, /at least 8/);
 });
 
 test("validatePasswordStrength rejects overly long passwords", () => {
