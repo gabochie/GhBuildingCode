@@ -508,3 +508,12 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_ai_messages_conv ON ai_messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_checklist_items_list ON checklist_items(checklist_id);
 
+-- Rate limiting
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT NOT NULL,
+  window_start INTEGER NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (key, window_start)
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_key ON rate_limits(key);
+
