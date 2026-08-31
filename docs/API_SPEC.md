@@ -128,6 +128,20 @@ Gateways are enabled only when their env credentials are set (see `.env.example`
   { "plan": "professional", "months": 1 }
   ```
 
+### Cron / scheduled maintenance (internal)
+- `POST /api/v1/cron/billing` — daily auto-renewal sweep. **Internal only**:
+  invoked by the Worker's `scheduled` handler via a loopback fetch with the
+  shared `x-cron-secret` header (set with `wrangler secret put CRON_SECRET`).
+  Rejects any request with a wrong or missing secret. Behaviour:
+  1. **Expires** subscriptions past their `current_period_end`, so the
+     effective-plan resolution falls back to Free (no involuntary re-charging).
+  2. **Flags** subscriptions expiring within 7 days for the admin renewal queue.
+  Returns `{ ok, expired, dueForRenewal, remainingActive, at }`.
+- Cron trigger configured in `wrangler.jsonc` (`triggers.crons`), currently
+  `0 3 * * *` (daily 03:00 UTC). The wrapper entrypoint
+  `worker-scheduled.js` re-exports the OpenNext handler and fans `scheduled`
+  events into the route above; it no-ops if `CRON_SECRET`/`APP_URL` are unset.
+
 ## Auth model for API
 - Web: httpOnly JWT cookie.
 - Public/agent API: `Authorization: Bearer <api_key>` → `api_keys` table, usage events logged.

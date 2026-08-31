@@ -38,16 +38,19 @@ export async function activateSubscription(opts: {
   paymentId: string;
   gateway: string;
   fromIso: string | null;
+  /** Number of months to add to the effective period (default 1). */
+  months?: number;
 }): Promise<SubscriptionRow> {
   const db = await getDb();
   const plan = getPlan(opts.plan).id;
+  const months = Math.max(1, opts.months ?? 1);
   const existing = (await db
     .prepare("SELECT * FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY current_period_end DESC LIMIT 1")
     .get(opts.userId)) as SubscriptionRow | null;
 
   const base = !existing || isExpired(existing.current_period_end) ? (opts.fromIso ?? new Date().toISOString()) : existing.current_period_end;
   const periodStart = base;
-  const periodEnd = addMonthsIso(base, 1);
+  const periodEnd = addMonthsIso(base, months);
   const id = existing?.id ?? uid("sub");
   const subGateway = existing?.gateway ?? opts.gateway;
 

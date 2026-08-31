@@ -2,6 +2,7 @@ import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Table, THead, TR, TH, TD } from "@/components/ui";
 import { PlanEditor } from "./plan-editor";
+import { planPrice } from "@/lib/billing/plans";
 
 export default async function AdminPage() {
   const db = await getDb();
@@ -21,6 +22,38 @@ export default async function AdminPage() {
   const leads = (await db.prepare("SELECT * FROM upgrade_leads ORDER BY created_at DESC LIMIT 20").all()) as Array<Record<string, unknown>>;
   const genLeads = (await db.prepare("SELECT * FROM leads ORDER BY created_at DESC LIMIT 30").all()) as Array<Record<string, unknown>>;
   const genLeadCount = ((await db.prepare("SELECT COUNT(*) c FROM leads WHERE status = 'new'").get()) as { c: number }).c;
+
+  // --- Revenue & subscriptions ---
+  const nowIso = new Date().toISOString();
+  const soonIso = new Date(Date.now() + 7 * 86400000).toISOString();
+  const monthAgoIso = new Date(Date.now() - 30 * 86400000).toISOString();
+
+  // Monthly Recurring Revenue = sum of GHS price for each ACTIVE, non-expired subscription.
+  const activeSubs = (await db
+    .prepare("SELECT id, user_id, plan, payment_id, current_period_end FROM subscriptions WHERE status = 'active' AND current_period_end > ?")
+    .all(nowIso)) as Array<{ id: string; user_id: string; plan: string; payment_id: string | null; current_period_end: string }>;
+
+  let mrrMinor = 0;
+  for (const s of activeSubs) {
+    const price = planPrice(s.plan);
+    if (price) mrrMinor += parseInt(price.amountMinor, 10);
+  }
+
+  const expiringSoon = activeSubs.filter((s) => s.current_period_end <= soonIso).length;
+  const failedPayments = ((await db.prepare("SELECT COUNT(*) c FROM payments WHERE status IN ('failed','cancelled')").get()) as { c: number }).c;
+  const revenue30d = (await db
+    .prepare("SELECT COALESCE(SUM(CAST(amount_major AS INTEGER)), 0) total, COUNT(*) cnt FROM payments WHERE status = 'paid' AND created_at >= ?")
+    .get(monthAgoIso)) as { total: number; cnt: number };
+  const paidCount = ((await db.prepare("SELECT COUNT(*) c FROM payments WHERE status = 'paid'").get()) as { c: number }).c;
+  const totalUpgradeLeads = ((await db.prepare("SELECT COUNT(*) c FROM upgrade_leads").get()) as { c: number }).c;
+
+  const recentPayments = (await db
+    .prepare(
+      `SELECT p.id, p.user_id, u.email, p.reference, p.plan, p.currency, p.amount_major, p.gateway, p.status, p.created_at
+       FROM payments p JOIN users u ON u.id = p.user_id
+       ORDER BY p.created_at DESC LIMIT 15`
+    )
+    .all()) as Array<Record<string, unknown>>;
 
   return (
     <div>
@@ -76,6 +109,33 @@ export default async function AdminPage() {
         </Card>
       </div>
 
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-primary/30">
+          <CardContent className="pt-5">
+            <p className="text-2xl font-bold text-primary">GH₵{mrrMinor.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Monthly Recurring Revenue</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-2xl font-bold">{activeSubs.length}</p>
+            <p className="text-xs text-muted-foreground">Active subscriptions</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-2xl font-bold">{expiringSoon}</p>
+            <p className="text-xs text-muted-foreground">Expiring within 7 days (renew)</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-2xl font-bold text-destructive">{failedPayments}</p>
+            <p className="text-xs text-muted-foreground">Failed / cancelled payments</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="mt-6 border-warning/30 bg-warning/5">
         <CardHeader><CardTitle className="text-sm">Setup Checklist</CardTitle></CardHeader>
         <CardContent>
@@ -121,6 +181,48 @@ export default async function AdminPage() {
                   <TD><Badge tone={String(u.plan) === "free" ? "default" : "primary"}>{String(u.plan).toUpperCase()}</Badge></TD>
                   <TD className="text-xs text-muted-foreground">{String(u.created_at)}</TD>
                   <TD><PlanEditor userId={String(u.id)} current={String(u.plan)} /></TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Revenue & payments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 grid gap-4 text-sm sm:grid-cols-3">
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Payments (last 30 days)</p>
+              <p className="text-lg font-bold">GH₵{revenue30d.total.toLocaleString()} ({revenue30d.cnt})</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Total paid transactions</p>
+              <p className="text-lg font-bold">{paidCount}</p>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs text-muted-foreground">Upgrade leads → paid conversion</p>
+              <p className="text-lg font-bold">{totalUpgradeLeads ? `${Math.round((paidCount / totalUpgradeLeads) * 100)}%` : "—"}</p>
+            </div>
+          </div>
+          <Table>
+            <THead>
+              <TR><TH>Date</TH><TH>Email</TH><TH>Ref</TH><TH>Plan</TH><TH>Amount</TH><TH>Gateway</TH><TH>Status</TH></TR>
+            </THead>
+            <tbody>
+              {recentPayments.length === 0 ? (
+                <TR><TD className="text-xs text-muted-foreground" colSpan={7}>No payments yet.</TD></TR>
+              ) : recentPayments.map((p) => (
+                <TR key={String(p.id)}>
+                  <TD className="text-xs text-muted-foreground">{String(p.created_at).slice(0, 10)}</TD>
+                  <TD className="text-xs">{String(p.email)}</TD>
+                  <TD className="font-mono text-xs">{String(p.reference)}</TD>
+                  <TD><Badge tone={String(p.plan) === "free" ? "default" : "primary"}>{String(p.plan).toUpperCase()}</Badge></TD>
+                  <TD className="text-xs">{String(p.currency)} {String(p.amount_major)}</TD>
+                  <TD className="text-xs">{String(p.gateway)}</TD>
+                  <TD><Badge tone={String(p.status) === "paid" ? "success" : String(p.status) === "pending" ? "warning" : "destructive"}>{String(p.status)}</Badge></TD>
                 </TR>
               ))}
             </tbody>
