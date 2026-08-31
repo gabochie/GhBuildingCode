@@ -43,7 +43,8 @@ export async function POST(_req: Request, ctx: { params: Promise<{ userId: strin
       plan: planId,
       paymentId,
       gateway: "manual",
-      fromIso: now()
+      fromIso: now(),
+      months: parsed.data.months
     });
 
     await db
