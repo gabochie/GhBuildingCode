@@ -89,6 +89,45 @@ Every response:
 
 - `GET /api/v1/agent/capabilities` — capability list (S24)
 
+## Billing & payments (Ghana)
+Payments are collected in Ghana Cedis via local gateways and activate a paid
+plan for one billing period (renewal done by the human super-admin, or by a
+follow-up payment). Payment records and subscriptions live in D1.
+
+- `GET /api/v1/billing/config` — available payment gateways + GHS prices
+  (no secrets). Auth required.
+  ```json
+  { "gateways": [{"id":"moolre","label":"Moolre (MoMo)"}], "plans": [{"id":"professional","name":"Professional","price":{"currency":"GHS","amountMinor":"399","label":"GH₵399"}}] }
+  ```
+- `POST /api/v1/billing/checkout` — initiate a payment. Auth required.
+  ```json
+  { "plan": "professional", "gateway": "moolre", "phone": "0244000000" }
+  ```
+  → `{ payment_id, reference, gateway, redirectUrl, message }`. For Moolre,
+  `redirectUrl` is `null` and `message` asks the user to approve the MoMo
+  prompt on their phone; for ExpressPay, `redirectUrl` points to the hosted
+  checkout page.
+- `GET /api/v1/billing/status?reference=<pay_ref>` — poll a payment status.
+  Auth required (own payments only). `status` ∈ `pending | paid | failed | cancelled`.
+- `POST /api/v1/billing/webhooks/{moolre|expresspay}` — gateway webhook
+  receiver (public). The gateway identifies the transaction; the service then
+  re-queries the gateway for an authoritative status before activating a plan,
+  so a forged POST cannot grant a paid plan. Returns HTTP 200 immediately.
+
+Gateways are enabled only when their env credentials are set (see `.env.example`):
+- **Moolre**: `MOOLRE_API_KEY`, `MOOLRE_ACCOUNT_NUMBER` (mobile-money
+  aggregator: MTN / Telecel / AirtelTigo MoMo).
+- **ExpressPay**: `EXPRESSPAY_MERCHANT_ID`, `EXPRESSPAY_API_KEY` (cards +
+  mobile money + gh-link).
+
+### Admin (human super-admin in the loop)
+- `GET /api/v1/admin/subscriptions` — subscriptions + payments list.
+- `POST /api/v1/admin/subscriptions/{userId}` — manually renew/extend a user's
+  plan period (e.g. after an off-platform payment). Body:
+  ```json
+  { "plan": "professional", "months": 1 }
+  ```
+
 ## Auth model for API
 - Web: httpOnly JWT cookie.
 - Public/agent API: `Authorization: Bearer <api_key>` → `api_keys` table, usage events logged.
