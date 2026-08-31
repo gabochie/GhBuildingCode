@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
 import { PLANS } from "@/lib/billing/plans";
-import { ok, badRequest, unauthorized, forbidden, handleError } from "@/lib/api";
+import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
 
 const schema = z.object({
   user_id: z.string().min(1),
@@ -10,10 +9,8 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return forbidden("Admins only.");
   try {
+    const session = await requireAdmin();
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid payload.");
     const planId = parsed.data.plan.toLowerCase();
