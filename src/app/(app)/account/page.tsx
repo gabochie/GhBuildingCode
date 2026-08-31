@@ -4,7 +4,8 @@ import { getSession, getDbUser } from "@/lib/auth/session";
 import { getPlan, getUsage } from "@/lib/billing/plans";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@/components/ui";
-import { LogOut, ArrowRight } from "lucide-react";
+import { SignOutButton } from "@/components/sign-out-button";
+import { ArrowRight } from "lucide-react";
 
 function meter(used: number, limit: number) {
   const pct = limit === Infinity ? 0 : Math.min(100, Math.round((used / limit) * 100));
@@ -36,11 +37,10 @@ export default async function AccountPage() {
         title="Account"
         description="Your profile and plan usage."
         actions={
-          <form action="/api/v1/auth/logout" method="post">
-            <button type="submit" className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm hover:bg-muted">
-              <LogOut className="h-4 w-4" /> Sign out
-            </button>
-          </form>
+          <SignOutButton
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm hover:bg-muted"
+            label="Sign out"
+          />
         }
       />
 

@@ -1,27 +1,71 @@
-import { cookies } from "next/headers";
-import { verifySession } from "./tokens";
-import type { SessionClaims } from "./tokens";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/db";
 import { effectivePlan } from "@/lib/billing/subscriptions";
+import { syncClerkUser } from "./clerk-sync";
 
-export type { SessionClaims };
+export interface SessionClaims {
+  sub: string;
+  email: string;
+  name: string;
+  role: string;
+  plan: string;
+}
 
-const COOKIE_NAME = "ghbc_session";
+export type { SessionClaims as Session };
 
+/**
+ * Clerk adapter that preserves the legacy `SessionClaims` shape used across the
+ * app, so API routes and pages keep calling `getSession()`/`getDbUser()`.
+ *
+ * Session = a signed-in Clerk user. The local `users.id` is the Clerk user id;
+ * `syncClerkUser` provisions the row on first authenticated request. Role/plan
+ * (including the effective paid-subscription plan and grace period) come from
+ * the DB via `effectivePlan`.
+ */
 export async function getSession(): Promise<SessionClaims | null> {
-  const store = await cookies();
-  const token = store.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-  const claims = verifySession(token);
-  if (!claims) return null;
+  if (!clerkConfigured()) return null;
+  const { userId } = await auth();
+  if (!userId) return null;
+
   const db = await getDb();
-  const user = (await db.prepare("SELECT id, plan, role FROM users WHERE id = ?").get(claims.sub)) as { id: string; plan: string; role: string } | undefined;
-  if (!user) return null;
-  // Effective plan: a paid `users.plan` is only honored while an active,
-  // non-expired subscription backs it; otherwise (and for unsubscription
-  // admin grants) we fall back gracefully.
-  const plan = (await effectivePlan(user.id)).id;
-  return { ...claims, plan, role: user.role };
+  const user = (await db.prepare("SELECT email, name, role FROM users WHERE id = ?").get(userId)) as
+    | { email: string; name: string; role: string }
+    | undefined;
+
+  let email: string;
+  let name: string;
+  let role: string;
+
+  if (user) {
+    email = user.email;
+    name = user.name;
+    role = user.role;
+  } else {
+    // First-time provisioning: pull accurate email/name from Clerk's Backend
+    // API, then create the local row (id = Clerk userId).
+    try {
+      const clerkUser = await (await clerkClient()).users.getUser(userId);
+      email = clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress ?? "";
+      name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() || "";
+      const metaRole = (clerkUser.publicMetadata?.role as string | undefined) ?? null;
+      const created = await syncClerkUser({
+        clerkId: userId,
+        email: email || `${userId}@clerk.local`,
+        name: name || "GHBC User",
+        role: metaRole,
+        plan: (clerkUser.publicMetadata?.plan as string | undefined) ?? null
+      });
+      email = created.email;
+      name = created.name;
+      role = created.role;
+    } catch {
+      // Provisioning failed — treat as signed out so callers redirect to /login.
+      return null;
+    }
+  }
+
+  const plan = (await effectivePlan(userId)).id;
+  return { sub: userId, email, name, role, plan };
 }
 
 export async function requireSession(): Promise<SessionClaims> {
@@ -43,4 +87,12 @@ export async function getDbUser(session: SessionClaims) {
     | undefined;
   if (!user) return undefined;
   return { ...user, plan: (await effectivePlan(user.id)).id };
+}
+
+/** Clerk is only active when its env keys are configured. */
+export function clerkConfigured(): boolean {
+  return Boolean(
+    process.env.CLERK_SECRET_KEY &&
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  );
 }

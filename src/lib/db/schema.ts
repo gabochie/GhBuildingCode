@@ -5,7 +5,7 @@ PRAGMA foreign_keys=ON;
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
   name TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT 'user',
   plan TEXT NOT NULL DEFAULT 'free',

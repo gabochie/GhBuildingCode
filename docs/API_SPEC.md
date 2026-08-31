@@ -20,10 +20,10 @@ Every response:
 ## Endpoints
 
 ### Auth
-- `POST /api/v1/auth/register` — {email, password, name}; password must be 8–128 chars with lowercase + uppercase + number + special char
-- `POST /api/v1/auth/login` — {email, password} → sets httpOnly cookie
-- `POST /api/v1/auth/logout` — clears session cookie (POST only, CSRF-safe)
-- `GET /api/v1/auth/me` — current user + memberships
+Authentication is handled by **Clerk** (SSO + email/password). Sessions are
+managed by Clerk's SDK; the legacy in-house `login`/`register`/`logout`
+`/api/v1/auth/*` routes were retired on the Clerk switch.
+- `GET /api/v1/auth/me` — current user (Clerk-authenticated via `auth()`/`getSession()`)
 
 ### Projects
 - `GET /api/v1/projects`
@@ -150,7 +150,7 @@ Gateways are enabled only when their env credentials are set (see `.env.example`
   events into the route above; it no-ops if `CRON_SECRET`/`APP_URL` are unset.
 
 ## Auth model for API
-- Web: httpOnly JWT cookie.
+- Web: Clerk session (`auth()`/`getSession()`), on the `<ClerkProvider>` + server-side layout guards.
 - Public/agent API: `Authorization: Bearer <api_key>` → `api_keys` table, usage events logged.
 - Rate limiting per key/user.
 

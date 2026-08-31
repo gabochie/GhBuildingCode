@@ -6,7 +6,7 @@ PostgreSQL-ready: every table maps 1:1; `TEXT PRIMARY KEY` UUIDs keep portabilit
 ## Tables
 
 ### Auth & organization
-- `users` (id, email UNIQUE, password_hash, name, role[user|admin], plan, created_at, updated_at)
+- `users` (id = Clerk user id, email UNIQUE, password_hash NULLABLE (Clerk users have no local password), name, role[user|admin], plan, created_at, updated_at)
 - `organizations` (id, name, slug, owner_user_id, created_at)
 - `memberships` (id, org_id, user_id, role[owner|admin|member], created_at)
 

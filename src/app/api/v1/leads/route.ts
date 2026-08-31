@@ -2,15 +2,21 @@ import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
-import { saveLead } from "@/lib/voice/lead-capture";const postSchema = z.object({
-  name: z.string().min(1).max(120).optional(),
-  email: z.string().min(3).max(255),
-  phone: z.string().min(1).max(40).optional(),
-  organization: z.string().min(1).max(160).optional(),
+import { saveLead } from "@/lib/voice/lead-capture";
+
+// Optional fields in forms send empty strings (e.g. an unselected topic), so
+// allow "" to be treated as "not provided" rather than rejecting it.
+const optionalStr = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
+
+const postSchema = z.object({
+  name: optionalStr(120),
+  email: z.string().trim().min(3).max(255),
+  phone: optionalStr(40),
+  organization: optionalStr(160),
   source: z.enum(["marketing_form", "voice_browser", "voice_phone", "newsletter"]),
   channel: z.enum(["web", "voice", "phone"]),
-  interest: z.string().min(1).max(100).optional(),
-  message: z.string().max(2000).optional(),
+  interest: optionalStr(100),
+  message: optionalStr(2000),
   voice_session_id: z.string().optional()
 });
 

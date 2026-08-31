@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getDb, parseJson } from "@/lib/db";
 import { searchRequirements } from "@/lib/ai/retrieval";
@@ -29,8 +29,9 @@ const STATUS_TONE: Record<string, "destructive" | "warning" | "info" | "success"
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getSession();
+  if (!session) redirect("/login");
   const db = await getDb();
-  const project = (await db.prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?").get(id, session!.sub)) as
+  const project = (await db.prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?").get(id, session.sub)) as
     | Record<string, unknown>
     | undefined;
   if (!project) notFound();

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { cn } from "@/lib/cn";
 
@@ -49,7 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <script defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js" />
         ) : null}
       </head>
-      <body className={cn("min-h-screen antialiased")}>{children}</body>
+      <body className={cn("min-h-screen antialiased")}>
+        <ClerkProvider>{children}</ClerkProvider>
+      </body>
     </html>
   );
 }
