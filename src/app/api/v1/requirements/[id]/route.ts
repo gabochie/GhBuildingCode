@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { ok, notFound, handleError } from "@/lib/api";
+import { ok, notFound, handleError, withCache } from "@/lib/api";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,7 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const citations = (await db
       .prepare("SELECT * FROM source_citations WHERE requirement_id = ?")
       .all(req.requirement_id)) as unknown[];
-    return ok({ requirement: { ...req, conditions }, citations });
+    return withCache(ok({ requirement: { ...req, conditions }, citations }), { seconds: 3600, sMaxAge: 3600 });
   } catch (e) {
     return handleError(e);
   }

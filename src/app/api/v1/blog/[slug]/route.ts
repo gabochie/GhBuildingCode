@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getDb, now } from "@/lib/db";
-import { ok, badRequest, notFound, handleError, requireAdmin } from "@/lib/api";
+import { ok, badRequest, notFound, handleError, requireAdmin, withCache } from "@/lib/api";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 120);
@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     ).get(slug)) as Record<string, unknown> | undefined;
 
     if (!post) return notFound("Post not found.");
-    return ok({ post });
+    return withCache(ok({ post }), { seconds: 60, sMaxAge: 60, stale: 600 });
   } catch (e) {
     return handleError(e);
   }

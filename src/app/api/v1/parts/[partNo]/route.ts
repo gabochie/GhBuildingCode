@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { ok, notFound, handleError } from "@/lib/api";
+import { ok, notFound, handleError, withCache } from "@/lib/api";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ partNo: string }> }) {
   try {
@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ partNo:
       )
       .all(part.id)) as Array<Record<string, unknown>>;
 
-    return ok({ part, sections });
+    return withCache(ok({ part, sections }), { seconds: 3600, sMaxAge: 3600 });
   } catch (e) {
     return handleError(e);
   }

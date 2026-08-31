@@ -84,6 +84,13 @@ export function clientIp(req: Request): string {
   );
 }
 
+/** Add HTTP caching to a NextResponse (public read endpoints). */
+export function withCache(res: NextResponse, opts: { seconds?: number; sMaxAge?: number; stale?: number } = {}): NextResponse {
+  const { seconds = 300, sMaxAge = 300, stale = 86400 } = opts;
+  res.headers.set("Cache-Control", `public, max-age=${seconds}, s-maxage=${sMaxAge}, stale-while-revalidate=${stale}`);
+  return res;
+}
+
 export async function requireUserOrResponse(): Promise<SessionClaims | NextResponse> {
   const session = await getSession();
   if (!session) return unauthorized();
