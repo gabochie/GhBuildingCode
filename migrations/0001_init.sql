@@ -517,3 +517,38 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 CREATE INDEX IF NOT EXISTS idx_rate_limits_key ON rate_limits(key);
 
+-- Payments & subscriptions (Ghana gateways: Moolre, ExpressPay, MTN MoMo later)
+CREATE TABLE IF NOT EXISTS payments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  reference TEXT UNIQUE NOT NULL,
+  plan TEXT NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'GHS',
+  amount_major TEXT NOT NULL,
+  amount_minor TEXT NOT NULL,
+  gateway TEXT NOT NULL,
+  gateway_ref TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_gateway_ref ON payments(gateway, gateway_ref);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  plan TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  payment_id TEXT REFERENCES payments(id),
+  gateway TEXT,
+  current_period_start TEXT,
+  current_period_end TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status, current_period_end);
+
+
