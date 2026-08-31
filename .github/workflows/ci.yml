@@ -34,7 +34,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          AUTH_SECRET: ci-test-secret-1234567890
+          AUTH_SECRET: ci-test-secret-must-be-at-least-32-chars-1234567890
           AI_API_KEY: ""
 
   docker:
@@ -52,7 +52,7 @@ jobs:
       - name: Smoke test container
         run: |
           docker run -d --name ghbc-test \
-            -e AUTH_SECRET=ci-test-secret-1234567890 \
+            -e AUTH_SECRET=ci-test-secret-must-be-at-least-32-chars-1234567890 \
             -e NODE_ENV=production \
             -p 3000:3000 \
             ghbc:${{ github.sha }}

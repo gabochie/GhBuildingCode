@@ -75,6 +75,15 @@ export function tooManyRequests(message = "Too many requests. Please try again s
   );
 }
 
+/** Best-effort client IP extraction, Cloudflare-first. */
+export function clientIp(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
 export async function requireUserOrResponse(): Promise<SessionClaims | NextResponse> {
   const session = await getSession();
   if (!session) return unauthorized();
