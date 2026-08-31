@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { LayoutDashboard, Newspaper, Bot, ArrowLeft, LogOut, ShieldCheck, CreditCard } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const ADMIN_NAV = [
@@ -23,13 +24,14 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
     if (signingOut) return;
     setSigningOut(true);
     try {
-      await fetch("/api/v1/auth/logout", { method: "POST" });
+      await signOut();
     } finally {
       router.push("/login");
     }

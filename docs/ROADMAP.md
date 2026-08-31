@@ -6,7 +6,7 @@ Status: **PHASE 1 in progress** (docs, scaffold, DB, auth, design system, landin
 - [x] Repository + architecture docs
 - [ ] Scaffold Next.js + TS + Tailwind
 - [ ] SQLite schema + data layer
-- [ ] Email/password auth (bcrypt + JWT cookie, RBAC)
+- [x] Auth — Clerk (SSO + email/password, RBAC; legacy in-house JWT/bcrypt retired)
 - [ ] Design system (shadcn-style primitives)
 - [ ] Landing page + Dashboard
 

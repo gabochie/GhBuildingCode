@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/cn";
 import {
   LayoutDashboard,
@@ -48,13 +49,14 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
   const [signingOut, setSigningOut] = useState(false);
 
   async function handleSignOut() {
     if (signingOut) return;
     setSigningOut(true);
     try {
-      await fetch("/api/v1/auth/logout", { method: "POST" });
+      await signOut();
     } finally {
       router.push("/login");
     }

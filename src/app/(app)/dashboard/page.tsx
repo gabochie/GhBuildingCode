@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
@@ -7,24 +8,24 @@ import { FolderKanban, ShieldAlert, FileWarning, Clock3, ArrowRight } from "luci
 
 export default async function DashboardPage() {
   const session = await getSession();
+  if (!session) redirect("/login");
   const db = await getDb();
 
   const projects = (await db
     .prepare("SELECT * FROM projects WHERE user_id = ? ORDER BY updated_at DESC LIMIT 8")
-    .all(session!.sub)) as Array<Record<string, unknown>>;
+    .all(session.sub)) as Array<Record<string, unknown>>;
 
   const issues = (await db
     .prepare(
       "SELECT COUNT(*) c FROM compliance_findings f JOIN projects p ON p.id = f.project_id WHERE p.user_id = ? AND f.severity IN ('CRITICAL','HIGH')"
     )
-    .get(session!.sub)) as { c: number };
+    .get(session.sub)) as { c: number };
   const docs = (await db
     .prepare("SELECT COUNT(*) c FROM documents WHERE user_id = ?")
-    .get(session!.sub)) as { c: number };
+    .get(session.sub)) as { c: number };
   const lastReview = (await db
     .prepare("SELECT MAX(updated_at) m FROM projects WHERE user_id = ? AND status = 'reviewed'")
-    .get(session!.sub)) as { m: string | null };
-
+    .get(session.sub)) as { m: string | null };
   const scoreTone = (s: number | null) => {
     if (s == null) return "default";
     if (s >= 80) return "success";
