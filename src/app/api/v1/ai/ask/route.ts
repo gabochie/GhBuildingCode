@@ -2,8 +2,9 @@ import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { answerQuestion } from "@/lib/ai/rag";
-import { ok, badRequest, unauthorized, limitReached, handleError } from "@/lib/api";
+import { ok, badRequest, unauthorized, limitReached, handleError, tooManyRequests } from "@/lib/api";
 import { consumeQuota } from "@/lib/billing/plans";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const schema = z.object({
   question: z.string().min(3).max(2000),
@@ -15,6 +16,10 @@ const schema = z.object({
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return unauthorized();
+
+  const rl = await rateLimit("ask", session.sub);
+  if (!rl.allowed) return tooManyRequests("You are sending questions too quickly. Please slow down.", rateLimitHeaders(rl));
+
   try {
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid question payload.");

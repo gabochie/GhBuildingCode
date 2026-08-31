@@ -4,7 +4,8 @@ import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { hashPassword, validateEmail, validatePasswordStrength } from "@/lib/auth/password";
 import { signSession } from "@/lib/auth/tokens";
-import { badRequest, created, handleError } from "@/lib/api";
+import { badRequest, created, handleError, tooManyRequests } from "@/lib/api";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const bodySchema = z.object({
   email: z.string().min(3).max(255),
@@ -12,8 +13,20 @@ const bodySchema = z.object({
   name: z.string().min(1).max(120)
 });
 
+function clientIp(req: Request): string {
+  return (
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
 export async function POST(req: Request) {
   try {
+    const ip = clientIp(req);
+    const rl = await rateLimit("register", ip);
+    if (!rl.allowed) return tooManyRequests("Too many registrations from this address. Please try again later.", rateLimitHeaders(rl));
+
     const parsed = bodySchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid registration payload.");
     const { email, password, name } = parsed.data;
