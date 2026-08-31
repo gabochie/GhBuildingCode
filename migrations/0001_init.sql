@@ -484,3 +484,27 @@ CREATE TABLE IF NOT EXISTS graph_relationships (
   rel_type TEXT,
   properties_json TEXT DEFAULT '{}'
 );
+
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_projects_user_updated ON projects(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_findings_project ON compliance_findings(project_id);
+CREATE INDEX IF NOT EXISTS idx_findings_proj_sev ON compliance_findings(project_id, severity);
+CREATE INDEX IF NOT EXISTS idx_documents_user ON documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id);
+CREATE INDEX IF NOT EXISTS idx_blog_slug_status ON blog_posts(slug, status);
+CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feature_usage_lookup ON feature_usage(user_id, feature, period);
+CREATE INDEX IF NOT EXISTS idx_clauses_section ON clauses(section_id);
+CREATE INDEX IF NOT EXISTS idx_sections_part ON sections(part_id);
+CREATE INDEX IF NOT EXISTS idx_requirements_part ON requirements(part);
+CREATE INDEX IF NOT EXISTS idx_requirements_clause ON requirements(clause_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+CREATE INDEX IF NOT EXISTS idx_upgrade_leads_status ON upgrade_leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
+CREATE INDEX IF NOT EXISTS idx_ai_messages_conv ON ai_messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_list ON checklist_items(checklist_id);
+

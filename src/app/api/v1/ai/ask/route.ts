@@ -3,7 +3,7 @@ import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { answerQuestion } from "@/lib/ai/rag";
 import { ok, badRequest, unauthorized, limitReached, handleError } from "@/lib/api";
-import { checkLimit, incrementUsage } from "@/lib/billing/plans";
+import { consumeQuota } from "@/lib/billing/plans";
 
 const schema = z.object({
   question: z.string().min(3).max(2000),
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const { question, project_id, conversation_id, part } = parsed.data;
 
     const db = await getDb();
-    const chk = await checkLimit(session.sub, session.plan, "aiQuestionsPerMonth");
+    const chk = await consumeQuota(session.sub, session.plan, "aiQuestionsPerMonth");
     if (!chk.allowed) return limitReached("AI questions", chk.used, chk.limit, session.plan);
     let convId = conversation_id;
     if (!convId) {
@@ -67,8 +67,6 @@ export async function POST(req: Request) {
         uid("cite"), assistantMsgId, c.requirement_id, null, c.source_document, c.part, c.section, c.clause, c.page, c.snippet, c.status
       );
     }
-
-    await incrementUsage(session.sub, "ai_questions");
 
     return ok({
       answer: answer.content,

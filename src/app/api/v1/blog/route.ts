@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
-import { ok, badRequest, unauthorized, handleError } from "@/lib/api";
+import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 120);
@@ -33,8 +32,11 @@ export async function GET(req: Request) {
 
     if (status) {
       if (status !== "published") {
-        const session = await getSession();
-        if (!session || session.role !== "admin") return unauthorized("Admin access required to view drafts.");
+        try {
+          await requireAdmin();
+        } catch (e) {
+          return handleError(e);
+        }
       }
       conditions.push("status = ?"); params.push(status);
     } else { conditions.push("status = 'published'"); }
@@ -52,11 +54,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return unauthorized("Admin access required.");
-
   try {
+    const session = await requireAdmin();
     const parsed = createSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid post payload.");
 

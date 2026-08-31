@@ -192,3 +192,46 @@ export async function incrementUsage(userId: string, feature: string, period: st
      ON CONFLICT(user_id, feature, period) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at`
   ).run(userId, feature, period, now());
 }
+
+export interface QuotaResult {
+  allowed: boolean;
+  feature: FeatureKey;
+  used: number;
+  limit: number;
+  plan: Plan;
+}
+
+/**
+ * Atomically check-and-consume a monthly quota. Unlike a separate
+ * `checkLimit` + `incrementUsage` pair, this is a single conditional
+ * `UPDATE ... WHERE count < limit` that cannot overshoot the limit under
+ * concurrent requests (avoids the double-charge race).
+ *
+ * Returns `allowed: false` and the current usage when the limit is met.
+ */
+export async function consumeQuota(userId: string, planId: string, feature: FeatureKey): Promise<QuotaResult> {
+  const plan = getPlan(planId);
+  const limit = plan.limits[feature];
+  const db = await getDb();
+  const period = monthlyPeriod();
+
+  if (limit === Infinity) {
+    await incrementUsage(userId, feature, period);
+    return { allowed: true, feature, used: Infinity, limit, plan };
+  }
+
+  const result = await db.prepare(
+    `INSERT INTO feature_usage (user_id, feature, period, count, updated_at) VALUES (?, ?, ?, 1, ?)
+     ON CONFLICT(user_id, feature, period) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at
+     WHERE count < ?`
+  ).run(userId, feature, period, now(), limit);
+
+  if (result.changes === 0) {
+    const used = ((await db.prepare(
+      "SELECT COALESCE(SUM(count), 0) c FROM feature_usage WHERE user_id = ? AND feature = ? AND period = ?"
+    ).get(userId, feature, period)) as { c: number }).c;
+    return { allowed: false, feature, used, limit, plan };
+  }
+
+  return { allowed: true, feature, used: limit, limit, plan };
+}

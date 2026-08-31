@@ -48,6 +48,48 @@ test("verified source rules carry PASS output when input present", () => {
   assert.equal(m.get("R-001")?.source_verified, true);
 });
 
+test("R-001 emits FAIL when riser height is below the 102mm minimum", () => {
+  const res = evaluateRules({ stair_riser_height: 90 }, RULE_LIBRARY);
+  const m = ruleMap(res.findings);
+  assert.equal(m.get("R-001")?.status, "FAIL");
+  assert.equal(m.get("R-001")?.severity, "HIGH");
+});
+
+test("R-001 emits FAIL when riser height exceeds the 178mm maximum", () => {
+  const res = evaluateRules({ stair_riser_height: 200 }, RULE_LIBRARY);
+  const m = ruleMap(res.findings);
+  assert.equal(m.get("R-001")?.status, "FAIL");
+});
+
+test("R-001 emits PASS for a riser height within the legal range", () => {
+  const res = evaluateRules({ stair_riser_height: 160 }, RULE_LIBRARY);
+  const m = ruleMap(res.findings);
+  assert.equal(m.get("R-001")?.status, "PASS");
+});
+
+test("R-002 emits FAIL when tread depth is below 279mm", () => {
+  const res = evaluateRules({ stair_tread_depth: 250 }, RULE_LIBRARY);
+  const m = ruleMap(res.findings);
+  assert.equal(m.get("R-002")?.status, "FAIL");
+});
+
+test("R-002 emits PASS when tread depth meets the 279mm minimum", () => {
+  const res = evaluateRules({ stair_tread_depth: 300 }, RULE_LIBRARY);
+  const m = ruleMap(res.findings);
+  assert.equal(m.get("R-002")?.status, "PASS");
+});
+
+test("R-003 emits FAIL only when stair width is below 1219mm and not sprinklered", () => {
+  const fail = evaluateRules({ stair_width: 1000, sprinklered: false }, RULE_LIBRARY);
+  assert.equal(ruleMap(fail.findings).get("R-003")?.status, "FAIL");
+
+  const sprinklered = evaluateRules({ stair_width: 1000, sprinklered: true }, RULE_LIBRARY);
+  assert.equal(ruleMap(sprinklered.findings).get("R-003")?.status, "PASS");
+
+  const wide = evaluateRules({ stair_width: 1500, sprinklered: false }, RULE_LIBRARY);
+  assert.equal(ruleMap(wide.findings).get("R-003")?.status, "PASS");
+});
+
 test("unverified rule produces NOT_VERIFIED even when matched", () => {
   const res = evaluateRules({ occupancy: "business", floors: 1, floor_area: 300 }, RULE_LIBRARY);
   const m = ruleMap(res.findings);

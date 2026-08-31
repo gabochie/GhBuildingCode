@@ -5,7 +5,7 @@ import { searchRequirements } from "@/lib/ai/retrieval";
 import { occupancyGroups } from "@/lib/compliance/check";
 import { getSession } from "@/lib/auth/session";
 import { ok, badRequest, unauthorized, limitReached, handleError } from "@/lib/api";
-import { checkLimit, incrementUsage } from "@/lib/billing/plans";
+import { consumeQuota } from "@/lib/billing/plans";
 
 const schema = z.object({
   project_type: z.string().optional(),
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return unauthorized();
   try {
-    const chk = await checkLimit(session.sub, session.plan, "complianceChecksPerMonth");
+    const chk = await consumeQuota(session.sub, session.plan, "complianceChecksPerMonth");
     if (!chk.allowed) return limitReached("compliance checks", chk.used, chk.limit, session.plan);
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid compliance check payload.");
@@ -78,8 +78,6 @@ export async function POST(req: Request) {
     }));
 
     const missing = engine.missing_information.map((k) => k);
-
-    await incrementUsage(session.sub, "compliance_checks");
 
     return ok({
       status: engine.findings.some((f) => f.severity === "CRITICAL") ? "action_required" : "review_required",

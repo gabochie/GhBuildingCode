@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getDb, now } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
-import { ok, badRequest, unauthorized, notFound, handleError } from "@/lib/api";
+import { ok, badRequest, notFound, handleError, requireAdmin } from "@/lib/api";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 120);
@@ -24,7 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
     const { slug } = await params;
     const db = await getDb();
     const post = (await db.prepare(
-      "SELECT * FROM blog_posts WHERE slug = ?"
+      "SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'"
     ).get(slug)) as Record<string, unknown> | undefined;
 
     if (!post) return notFound("Post not found.");
@@ -35,11 +34,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return unauthorized("Admin access required.");
-
   try {
+    await requireAdmin();
     const { slug: currentSlug } = await params;
     const parsed = updateSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid post payload.");
@@ -87,11 +83,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ slug: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const session = await getSession();
-  if (!session) return unauthorized();
-  if (session.role !== "admin") return unauthorized("Admin access required.");
-
   try {
+    await requireAdmin();
     const { slug } = await params;
     const db = await getDb();
     const result = (await db.prepare("DELETE FROM blog_posts WHERE slug = ?").run(slug)) as { changes: number };

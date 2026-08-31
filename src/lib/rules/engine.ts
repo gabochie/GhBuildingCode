@@ -53,14 +53,32 @@ function toNum(v: unknown): number {
 }
 
 /**
+ * Select the output that should fire for an applicable rule.
+ * - If `rule.output_conditions` is defined, emit the first output whose
+ *   predicate conditions are all satisfied (real threshold evaluation).
+ * - Otherwise fall back to `outputs[0]`.
+ */
+function selectOutput(profile: ProjectProfile, rule: Rule): RuleOutput {
+  const selectors = rule.output_conditions;
+  if (selectors && selectors.length) {
+    for (const sel of selectors) {
+      if (sel.output_index < 0 || sel.output_index >= rule.outputs.length) continue;
+      const matched = sel.conditions.every((c) => evaluateCondition(profile, c));
+      if (matched) return rule.outputs[sel.output_index];
+    }
+    return rule.outputs[0];
+  }
+  return rule.outputs[0];
+}
+
+/**
  * Deterministic compliance engine (§10, §20 Layer 1).
  * Evaluates rules against a project profile. The LLM is never the calculator:
  * this function computes applicability, status, and missing information.
  *
- * Output selection: PASS when a positive output exists and rule has a numeric
- * variable within range (handled by rule-specific logic via conditions); rules
- * whose conditions are satisfied surface their primary output. Rules that
- * depend on input the project hasn't provided produce MISSING_INFORMATION.
+ * Output selection: a rule's findings are computed from threshold predicates
+ * (`output_conditions`) when provided, falling back to the first output. Rules
+ * that depend on input the project hasn't provided produce MISSING_INFORMATION.
  */
 export function evaluateRules(profile: ProjectProfile, rules: Rule[]): EngineResult {
   const findings: RuleFinding[] = [];
@@ -84,7 +102,7 @@ export function evaluateRules(profile: ProjectProfile, rules: Rule[]): EngineRes
     if (!matched) continue;
 
     applicableIds.add(rule.rule_id);
-    const output = rule.outputs[0];
+    const output = selectOutput(profile, rule);
     findings.push({
       rule_id: rule.rule_id,
       name: rule.name,
