@@ -157,6 +157,11 @@ export async function createDb(d1?: D1Database): Promise<BoundDB> {
     sqlite.pragma("journal_mode = WAL");
     sqlite.pragma("foreign_keys = ON");
 
+    // Apply the full schema (idempotent `IF NOT EXISTS`) on local init so
+    // existing dev databases pick up new tables/indexes without re-seeding.
+    const { SCHEMA } = await import("./schema");
+    sqlite.exec(SCHEMA);
+
     localDb = new LocalDB(() => sqlite);
   }
 
