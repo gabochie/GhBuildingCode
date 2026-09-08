@@ -7,7 +7,7 @@ export interface LeadInput {
   email: string;
   phone?: string;
   organization?: string;
-  source: "marketing_form" | "voice_browser" | "voice_phone" | "newsletter";
+  source: "marketing_form" | "voice_browser" | "voice_phone" | "newsletter" | "academy_enrollment";
   channel: "web" | "voice" | "phone";
   interest?: string;
   message?: string;

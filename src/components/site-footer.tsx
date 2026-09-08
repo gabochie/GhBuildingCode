@@ -13,6 +13,7 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
   {
     title: "Resources",
     links: [
+      { href: "/academy", label: "Building Code Academy" },
       { href: "/blog", label: "Blog" },
       { href: "/blog/feed.xml", label: "RSS Feed" }
     ]

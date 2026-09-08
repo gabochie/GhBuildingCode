@@ -3,6 +3,7 @@ import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
+  { href: "/academy", label: "Academy" },
   { href: "/blog", label: "Blog" }
 ];
 
