@@ -13,7 +13,7 @@ const postSchema = z.object({
   email: z.string().trim().min(3).max(255),
   phone: optionalStr(40),
   organization: optionalStr(160),
-  source: z.enum(["marketing_form", "voice_browser", "voice_phone", "newsletter"]),
+  source: z.enum(["marketing_form", "voice_browser", "voice_phone", "newsletter", "academy_enrollment"]),
   channel: z.enum(["web", "voice", "phone"]),
   interest: optionalStr(100),
   message: optionalStr(2000),

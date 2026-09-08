@@ -14,6 +14,7 @@ import {
   Building2,
   ScrollText,
   Workflow,
+  GraduationCap,
   Check
 } from "lucide-react";
 
@@ -145,6 +146,39 @@ export default function LandingPage() {
           Need SSO, unlimited usage or a dedicated deployment?{" "}
           <Link href="/demo" className="font-medium text-primary hover:underline">Talk to us about Enterprise →</Link>
         </p>
+      </section>
+
+      <section className="bg-card">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-16 lg:grid-cols-[1.2fr_1fr]">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
+              <GraduationCap className="h-4 w-4" />
+              Certified Ghana Building Code Academy
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Learn the code. Earn certified credentials.</h2>
+            <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+              Structured training and certification for GS 1207:2018, built on GHBC&apos;s source-backed
+              compliance intelligence. Tracks for architects, engineers, fire-safety professionals,
+              developers and building control.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <TrackedCta href="/academy" event="cta_academy_explore" className="inline-block">
+                <Button>Explore the Academy <ArrowRight className="h-4 w-4" /></Button>
+              </TrackedCta>
+              <TrackedCta href="/academy#enroll" event="cta_academy_enroll_home" className="inline-block">
+                <Button variant="outline">Request enrollment</Button>
+              </TrackedCta>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {["Certificate of competency", "Free foundation module", "Self-paced + cohorts", "Team training"].map((item) => (
+              <div key={item} className="rounded-xl border border-border bg-background p-5">
+                <Check className="h-5 w-5 text-success" />
+                <p className="mt-3 text-sm font-medium">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto mb-20 max-w-6xl px-6">
