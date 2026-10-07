@@ -36,9 +36,11 @@ export default async function ReportsPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
                 <p className="flex items-center gap-1.5"><FileText className="h-4 w-4" /> {String(p.status)} · updated {new Date(String(p.updated_at)).toLocaleDateString()}</p>
-                <a href={`/api/v1/projects/${p.id}/report`} target="_blank" rel="noreferrer" className="inline-block">
-                  <Button size="sm"><FileDown className="h-4 w-4" /> Download PDF</Button>
-                </a>
+                <Button asChild size="sm">
+                  <a href={`/api/v1/projects/${p.id}/report`} target="_blank" rel="noreferrer" className="inline-block">
+                    <FileDown className="h-4 w-4" /> Download PDF
+                  </a>
+                </Button>
               </CardContent>
             </Card>
           ))}

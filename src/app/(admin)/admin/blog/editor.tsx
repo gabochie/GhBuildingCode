@@ -81,9 +81,11 @@ export function PostEditor({ post, onSaved, onDeleted }: { post?: Post; onSaved:
           <span>{post ? "Edit Post" : "New Post"}</span>
           {post && (
             <div className="flex gap-2">
-              <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm"><Eye className="h-3.5 w-3.5" /> View</Button>
-              </a>
+              <Button asChild variant="outline" size="sm">
+                <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                  <Eye className="h-3.5 w-3.5" /> View
+                </a>
+              </Button>
               <Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading}><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
           )}

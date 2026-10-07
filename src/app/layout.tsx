@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { cn } from "@/lib/cn";
+import { PwaRegister } from "@/components/pwa-install";
 
 export const metadata: Metadata = {
   title: {
@@ -10,7 +11,35 @@ export const metadata: Metadata = {
   },
   description:
     "The AI-powered compliance intelligence layer for building design and construction in Ghana. Understand the requirements, check your project, find what's missing, build with confidence.",
-  keywords: ["Ghana", "building code", "GS 1207:2018", "compliance", "permits", "architecture", "construction"]
+  keywords: ["Ghana", "building code", "GS 1207:2018", "compliance", "permits", "architecture", "construction"],
+  manifest: "/manifest.webmanifest",
+  applicationName: "GHBC",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }]
+  },
+  appleWebApp: {
+    capable: true,
+    title: "GHBC",
+    statusBarStyle: "black-translucent"
+  },
+  formatDetection: {
+    telephone: false
+  }
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1120" }
+  ]
 };
 
 const THEME_INIT = `
@@ -51,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : null}
       </head>
       <body className={cn("min-h-screen antialiased")}>
+        <PwaRegister />
         <ClerkProvider
           signInUrl="/sign-in"
           signUpUrl="/sign-up"

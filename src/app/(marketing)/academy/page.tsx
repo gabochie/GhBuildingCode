@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { TrackedCta } from "@/components/tracked-cta";
+import { TrackedButton } from "@/components/tracked-cta";
 import { AcademyEnrollmentForm } from "@/components/academy-enrollment-form";
 import { GraduationCap, BookOpenCheck, FileCheck2, ShieldAlert, Landmark, ArrowRight, Check } from "lucide-react";
 
@@ -81,12 +81,12 @@ export default function AcademyPage() {
           source-backed compliance intelligence, with every module traceable to the code.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <TrackedCta href="#tracks" event="cta_academy_tracks" className="inline-block">
-            <Button size="lg">Explore certification tracks <ArrowRight className="h-4 w-4" /></Button>
-          </TrackedCta>
-          <TrackedCta href="#enroll" event="cta_academy_enroll" className="inline-block">
-            <Button size="lg" variant="outline">Request enrollment</Button>
-          </TrackedCta>
+          <TrackedButton href="#tracks" event="cta_academy_tracks" size="lg">
+            Explore certification tracks <ArrowRight className="h-4 w-4" />
+          </TrackedButton>
+          <TrackedButton href="#enroll" event="cta_academy_enroll" size="lg" variant="outline">
+            Request enrollment
+          </TrackedButton>
         </div>
         <div className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> 38-part code taxonomy</span>
@@ -146,9 +146,9 @@ export default function AcademyPage() {
                     </li>
                   ))}
                 </ul>
-                <TrackedCta href="#enroll" event="cta_academy_track_apply" props={{ track: t.title }} className="mt-auto inline-block">
-                  <Button variant="outline" size="sm">Apply for this track</Button>
-                </TrackedCta>
+                <TrackedButton href="#enroll" event="cta_academy_track_apply" props={{ track: t.title }} variant="outline" size="sm" className="mt-auto">
+                  Apply for this track
+                </TrackedButton>
               </CardContent>
             </Card>
           ))}
@@ -210,9 +210,9 @@ export default function AcademyPage() {
             Organization cohorts, custom schedules and group certification for firms,
             regulators and developers.
           </p>
-          <TrackedCta href="#enroll" event="cta_academy_team" className="mt-7 inline-block">
-            <Button size="lg" className="bg-white text-slate-900 hover:opacity-90">Request a team cohort</Button>
-          </TrackedCta>
+          <TrackedButton href="#enroll" event="cta_academy_team" size="lg" className="mt-7 bg-white text-slate-900 hover:opacity-90">
+            Request a team cohort
+          </TrackedButton>
         </div>
       </section>
     </main>

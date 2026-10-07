@@ -4,7 +4,8 @@
   "private": true,
   "description": "GHBC - Ghana Building Compliance Intelligence platform",
   "scripts": {
-    "build": "next build",
+    "build": "next build && node scripts/build-sw.mjs",
+    "icons": "node scripts/generate-icons.mjs",
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",

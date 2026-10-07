@@ -205,12 +205,8 @@ export function ContentPipeline() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/blog/${post.slug}`} target="_blank">
-                    <Button variant="outline" size="sm">Preview</Button>
-                  </Link>
-                  <Link href={`/admin/blog`}>
-                    <Button variant="outline" size="sm">Edit</Button>
-                  </Link>
+                  <Button asChild variant="outline" size="sm"><Link href={`/blog/${post.slug}`} target="_blank">Preview</Link></Button>
+                  <Button asChild variant="outline" size="sm"><Link href={`/admin/blog`}>Edit</Link></Button>
                   <Button
                     size="sm"
                     onClick={() => handlePublish(post.slug)}
