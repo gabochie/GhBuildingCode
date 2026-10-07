@@ -27,9 +27,9 @@ export default async function ProjectsPage() {
         title="Projects"
         description="Your project compliance workspace — each project has a profile, compliance matrix and checklist."
         actions={
-          <Link href="/projects/new">
-            <Button><Plus className="h-4 w-4" /> New project</Button>
-          </Link>
+          <Button asChild>
+            <Link href="/projects/new"><Plus className="h-4 w-4" /> New project</Link>
+          </Button>
         }
       />
       {projects.length === 0 ? (
@@ -39,9 +39,9 @@ export default async function ProjectsPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Create a project, describe the building, and GHBC constructs the applicable requirements.
             </p>
-            <Link href="/projects/new" className="mt-5 inline-block">
-              <Button>Check My Project <ArrowRight className="h-4 w-4" /></Button>
-            </Link>
+            <Button asChild>
+              <Link href="/projects/new" className="mt-5 inline-block">Check My Project <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (

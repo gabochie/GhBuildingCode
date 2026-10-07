@@ -32,9 +32,11 @@ export function ProjectActions({ projectId }: { projectId: string }) {
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
         {loading ? "Reviewing…" : "Run Compliance Review"}
       </Button>
-      <a href={`/api/v1/projects/${projectId}/report`} target="_blank" rel="noreferrer">
-        <Button variant="outline"><FileDown className="h-4 w-4" /> Download PDF Report</Button>
-      </a>
+      <Button asChild variant="outline">
+        <a href={`/api/v1/projects/${projectId}/report`} target="_blank" rel="noreferrer">
+          <FileDown className="h-4 w-4" /> Download PDF Report
+        </a>
+      </Button>
       {message && <span className="text-sm text-muted-foreground">{message}</span>}
     </div>
   );

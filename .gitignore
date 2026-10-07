@@ -21,3 +21,6 @@ wrangler.json
 .wrangler
 .dev.vars*
 !.dev.vars.example
+
+# generated at build time (see scripts/build-sw.mjs)
+public/sw.js

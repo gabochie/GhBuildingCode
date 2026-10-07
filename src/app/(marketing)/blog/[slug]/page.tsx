@@ -165,9 +165,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
             Ask GHBC, get source-backed answers, and see a compliance matrix for your project — free to start.
           </p>
-          <Link href="/register" className="mt-6 inline-block">
-            <Button size="lg" className="bg-white text-slate-900 hover:opacity-90">Check a project free</Button>
-          </Link>
+          <Button asChild size="lg" className="bg-white text-slate-900 hover:opacity-90">
+            <Link href="/register" className="mt-6 inline-block">Check a project free</Link>
+          </Button>
         </aside>
 
         <aside className="mt-8 rounded-xl border border-border bg-card p-6">

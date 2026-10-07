@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { TrackedCta } from "@/components/tracked-cta";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { TrackedButton } from "@/components/tracked-cta";
 import { Check, Sparkles } from "lucide-react";
 
 // Public pricing display data (no DB import — keeps this a browser-safe client
@@ -79,16 +79,15 @@ export default function PricingSection() {
                     </li>
                   ))}
                 </ul>
-                <TrackedCta
+                <TrackedButton
                   href="/register"
                   event="cta_pricing"
                   props={{ plan: p.id, period }}
-                  className="mt-5 inline-block w-full"
+                  className="mt-5 w-full"
+                  variant={p.id === "professional" ? "default" : "outline"}
                 >
-                  <Button className="w-full" variant={p.id === "professional" ? "default" : "outline"}>
-                    {p.id === "free" ? "Start free" : `Get ${p.name}`}
-                  </Button>
-                </TrackedCta>
+                  {p.id === "free" ? "Start free" : `Get ${p.name}`}
+                </TrackedButton>
               </CardContent>
             </Card>
           );

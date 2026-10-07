@@ -10,8 +10,8 @@ export default function NotFound() {
         This page does not exist — or it has moved.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <Link href="/"><Button size="lg">Back to Home</Button></Link>
-        <Link href="/dashboard"><Button size="lg" variant="outline">Dashboard</Button></Link>
+        <Button asChild size="lg"><Link href="/">Back to Home</Link></Button>
+        <Button asChild size="lg" variant="outline"><Link href="/dashboard">Dashboard</Link></Button>
       </div>
     </main>
   );

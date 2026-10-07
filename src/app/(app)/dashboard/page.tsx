@@ -39,9 +39,9 @@ export default async function DashboardPage() {
         title={`Welcome back${session?.name ? `, ${session.name.split(" ")[0]}` : ""}`}
         description="Ghana Building Compliance Intelligence — understand requirements, check your project, find what's missing."
         actions={
-          <Link href="/projects/new">
-            <Button>Check My Project <ArrowRight className="h-4 w-4" /></Button>
-          </Link>
+          <Button asChild>
+            <Link href="/projects/new">Check My Project <ArrowRight className="h-4 w-4" /></Link>
+          </Button>
         }
       />
 
@@ -94,9 +94,9 @@ export default async function DashboardPage() {
           <CardContent className="py-12 text-center">
             <p className="font-medium">No projects yet</p>
             <p className="mt-1 text-sm text-muted-foreground">Create a project to generate a compliance profile and checklist.</p>
-            <Link href="/projects/new" className="mt-4 inline-block">
-              <Button>Create your first project</Button>
-            </Link>
+            <Button asChild>
+              <Link href="/projects/new" className="mt-4 inline-block">Create your first project</Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (

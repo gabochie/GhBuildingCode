@@ -5,10 +5,13 @@ export function Button({
   className,
   variant = "default",
   size = "md",
+  asChild = false,
+  children,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "default" | "secondary" | "outline" | "ghost" | "destructive" | "link";
   size?: "sm" | "md" | "lg" | "icon";
+  asChild?: boolean;
 }) {
   const variants: Record<string, string> = {
     default: "bg-primary text-primary-foreground hover:opacity-90",
@@ -24,16 +27,38 @@ export function Button({
     lg: "h-12 px-6 text-base",
     icon: "h-9 w-9"
   };
+
+  const classes = cn(
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    sizes[size],
+    className
+  );
+
+  if (asChild) {
+    const child = React.Children.only(children);
+    if (!React.isValidElement(child)) {
+      throw new Error("Button asChild expects a single valid child element");
+    }
+    const restProps = Object.fromEntries(
+      Object.entries(props).filter(([, v]) => v !== undefined)
+    ) as Record<string, unknown>;
+    return React.cloneElement(
+      child as React.ReactElement<{ className?: string }>,
+      {
+        ...restProps,
+        className: cn(
+          (child.props as { className?: string }).className,
+          classes
+        )
+      }
+    );
+  }
+
   return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-        variants[variant],
-        sizes[size],
-        className
-      )}
-      {...props}
-    />
+    <button className={classes} {...props}>
+      {children}
+    </button>
   );
 }
 

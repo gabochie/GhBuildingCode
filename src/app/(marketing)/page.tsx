@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { TrackedCta } from "@/components/tracked-cta";
+import { TrackedButton, TrackedCta } from "@/components/tracked-cta";
 import { NewsletterForm } from "@/components/newsletter-form";
 import PricingSection from "@/components/pricing-section";
 import {
@@ -79,15 +79,15 @@ export default function LandingPage() {
           Build with greater confidence.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <TrackedCta href="/register" event="cta_check_project" className="inline-block">
-            <Button size="lg">Check a Project <ArrowRight className="h-4 w-4" /></Button>
-          </TrackedCta>
-          <TrackedCta href="/demo" event="cta_book_demo" className="inline-block">
-            <Button size="lg" variant="outline">Book a free demo</Button>
-          </TrackedCta>
-          <TrackedCta href="/code" event="cta_explore_code" className="inline-block">
-            <Button size="lg" variant="ghost">Explore Ghana Building Code</Button>
-          </TrackedCta>
+          <TrackedButton href="/register" event="cta_check_project" size="lg">
+            Check a Project <ArrowRight className="h-4 w-4" />
+          </TrackedButton>
+          <TrackedButton href="/demo" event="cta_book_demo" size="lg" variant="outline">
+            Book a free demo
+          </TrackedButton>
+          <TrackedButton href="/code" event="cta_explore_code" size="lg" variant="ghost">
+            Explore Ghana Building Code
+          </TrackedButton>
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
           Preliminary compliance intelligence — not a legal determination or permit approval.
@@ -162,12 +162,12 @@ export default function LandingPage() {
               developers and building control.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <TrackedCta href="/academy" event="cta_academy_explore" className="inline-block">
-                <Button>Explore the Academy <ArrowRight className="h-4 w-4" /></Button>
-              </TrackedCta>
-              <TrackedCta href="/academy#enroll" event="cta_academy_enroll_home" className="inline-block">
-                <Button variant="outline">Request enrollment</Button>
-              </TrackedCta>
+              <TrackedButton href="/academy" event="cta_academy_explore">
+                Explore the Academy <ArrowRight className="h-4 w-4" />
+              </TrackedButton>
+              <TrackedButton href="/academy#enroll" event="cta_academy_enroll_home" variant="outline">
+                Request enrollment
+              </TrackedButton>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -190,9 +190,9 @@ export default function LandingPage() {
             Searchable, explainable, project-aware digital compliance for architects,
             engineers, developers, fire-safety professionals and building control.
           </p>
-          <TrackedCta href="/register" event="cta_start_free" className="mt-7 inline-block">
-            <Button size="lg" className="bg-white text-slate-900 hover:opacity-90">Start free</Button>
-          </TrackedCta>
+          <TrackedButton href="/register" event="cta_start_free" size="lg" className="mt-7 bg-white text-slate-900 hover:opacity-90">
+            Start free
+          </TrackedButton>
         </div>
       </section>
 
