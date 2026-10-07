@@ -21,6 +21,7 @@ import {
   LogOut,
   Mic,
   Menu,
+  MoreHorizontal,
   X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -41,6 +42,13 @@ const NAV = [
   { href: "/account", label: "Account", icon: UserRound }
 ];
 
+const BOTTOM_NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/code", label: "Code", icon: BookOpen },
+  { href: "/compliance", label: "Compliance", icon: ShieldCheck }
+];
+
 export function AppShell({
   children,
   user,
@@ -59,6 +67,12 @@ export function AppShell({
   const nav = showAdmin
     ? [...NAV, { href: "/admin", label: "Admin Console", icon: Settings2 }]
     : NAV;
+
+  const moreActive =
+    drawerOpen ||
+    !BOTTOM_NAV.some(
+      (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+    );
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -200,7 +214,7 @@ export function AppShell({
         <SidebarContent />
       </aside>
 
-      <div className="flex min-h-dvh flex-1 flex-col lg:ml-60">
+      <div className="flex min-h-dvh flex-1 flex-col pb-[calc(env(safe-area-inset-bottom)+4.5rem)] lg:ml-60 lg:pb-0">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border bg-background/80 px-4 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2 backdrop-blur lg:hidden">
           <button
             type="button"
@@ -242,6 +256,45 @@ export function AppShell({
           </div>
         </footer>
       </div>
+
+      <nav
+        aria-label="Bottom navigation"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur lg:hidden"
+      >
+        <div className="grid grid-cols-5 px-2 pb-[env(safe-area-inset-bottom)] pt-1.5">
+          {BOTTOM_NAV.map((item) => {
+            const active =
+              pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[10px] font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            aria-label="More menu"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+            className={cn(
+              "flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[10px] font-medium transition-colors",
+              moreActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+            More
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
