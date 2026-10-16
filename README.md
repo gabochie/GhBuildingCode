@@ -102,3 +102,17 @@ Live: https://ghbc.gabochie.com — 38-part code explorer + compliance matrix.
 
 ## Case Study — 27k clauses in seconds
 Problem: GS1207 PDF unsearchable. Build: SQLite FTS5 + Clerk + Cloudflare. Result: cited answer in seconds. Service: $2,200 pilot in 21 days.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    C[GS 1207 corpus<br/>38 parts / 27k reqs] --> I[Ingest pipeline]
+    I --> DB[(SQLite FTS5)]
+    U[Architect] --> UI[Next.js + Clerk]
+    UI --> R1[Rules engine]
+    R1 --> R2[FTS retrieval]
+    R2 --> R3[Optional LLM]
+    R2 --> A[Cited answer<br/>doc / part / clause / page]
+    R3 --> A
+```
