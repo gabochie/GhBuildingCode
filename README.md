@@ -96,3 +96,9 @@ GS 1207:2018 is a controlled source. GHBC supports licensed/authorized/public ma
 only, always with provenance; it never fabricates requirements. Requirements default to
 `NOT VERIFIED` until confirmed by editorial review against the source, and non-verified
 sources never power PASS/FAIL determinations.
+
+## Live Demo ✅ Verified Oct 16 2026
+Live: https://ghbc.gabochie.com — 38-part code explorer + compliance matrix.
+
+## Case Study — 27k clauses in seconds
+Problem: GS1207 PDF unsearchable. Build: SQLite FTS5 + Clerk + Cloudflare. Result: cited answer in seconds. Service: $2,200 pilot in 21 days.
