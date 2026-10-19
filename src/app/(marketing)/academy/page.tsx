@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import Link from "next/link";
+import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { TrackedButton } from "@/components/tracked-cta";
 import { AcademyEnrollmentForm } from "@/components/academy-enrollment-form";
 import { GraduationCap, BookOpenCheck, FileCheck2, ShieldAlert, Landmark, ArrowRight, Check } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Ghana Building Code Academy — Certified Training & Certification",
+  title: "Ghana Building Code Academy — Source-Backed Training & Certificates",
   description:
-    "GHBC's certified training program for the Ghana Building Code (GS 1207:2018). Structured tracks, source-backed curriculum and recognized certification for architects, engineers, fire-safety professionals, developers and building control.",
+    "Study the Ghana Building Code (GS 1207:2018) through structured, source-backed modules and earn a GHBC-issued certificate of completion. Free core track for architects, engineers, fire-safety professionals, developers and building control.",
   openGraph: {
-    title: "Ghana Building Code Academy — Certified Training & Certification",
+    title: "Ghana Building Code Academy — Source-Backed Training & Certificates",
     description:
-      "Structured training and certification for GS 1207:2018 — the Ghana Building Code — powered by GHBC's source-backed compliance intelligence.",
+      "Structured training for GS 1207:2018 — the Ghana Building Code — built on GHBC's source-backed compliance intelligence. Study free, prove your knowledge, earn a GHBC certificate.",
     type: "website",
     siteName: "GHBC",
     images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ghana Building Code Academy" }]
@@ -27,44 +28,48 @@ const AUDIENCES = [
 
 const TRACKS = [
   {
+    slug: "gs1207_core",
     icon: GraduationCap,
     title: "GS 1207 Core Proficiency",
     audience: "Foundation — everyone",
-    badge: "Free foundation",
+    badge: "Free",
     body: "Code structure, scope and the 38-part taxonomy. Learn how the Ghana Building Code is organized and how to navigate it with confidence.",
     highlights: ["Code structure & scope", "Occupancy classes 101", "Navigating the 38-part taxonomy"]
   },
   {
+    slug: "compliance_professional",
     icon: BookOpenCheck,
     title: "Building Compliance Professional",
     audience: "Architects · Engineers · Consultants",
-    badge: "Certification track",
+    badge: "Professional",
     body: "Requirements analysis, project compliance checks and gap identification using source-backed workflows.",
     highlights: ["Requirement analysis", "Compliance matrices", "Gap identification"]
   },
   {
+    slug: "permit_readiness",
     icon: FileCheck2,
     title: "Permit Readiness Certification",
     audience: "Developers · Building control",
-    badge: "Certification track",
+    badge: "Professional",
     body: "Authority-specific permit requirements, documentation checklists and submission readiness.",
     highlights: ["Authority checklists", "Documentation", "Submission readiness"]
   },
   {
+    slug: "fire_egress",
     icon: ShieldAlert,
     title: "Fire & Means-of-Egress Specialist",
     audience: "Fire-safety professionals",
-    badge: "Specialist track",
+    badge: "Specialist",
     body: "Fire-safety requirements, means-of-egress and assembly-specific rules — taught clause by clause.",
     highlights: ["Fire requirements", "Means-of-egress", "Assembly-specific rules"]
   }
 ];
 
 const STEPS = [
-  { step: "1", title: "Request enrollment", body: "Tell us which track fits your role. We'll confirm curriculum, schedule and fees." },
-  { step: "2", title: "Study the modules", body: "Self-paced online modules with source-backed readings and worked examples." },
-  { step: "3", title: "Complete the assessment", body: "Demonstrate competency through module assessments and a practical task." },
-  { step: "4", title: "Earn your certification", body: "Receive a verified GHBC certificate of competency for the Ghana Building Code." }
+  { step: "1", title: "Start learning free", body: "Enroll in the free GS 1207 Core track and work through sourced modules at your own pace." },
+  { step: "2", title: "Study the modules", body: "Self-paced lessons, each traceable to the exact clause and page it comes from." },
+  { step: "3", title: "Take the assessment", body: "Answer questions drawn only from verified extracts of the Code and see the reasoning." },
+  { step: "4", title: "Earn your certificate", body: "Pass the exam and receive a GHBC-issued certificate of completion with a public verification link." }
 ];
 
 export default function AcademyPage() {
@@ -76,24 +81,24 @@ export default function AcademyPage() {
           Ghana Building Code Academy
         </div>
         <h1 className="mx-auto max-w-3xl text-balance text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Master the Ghana Building Code. Earn certified credentials.
+          Master the Ghana Building Code. Prove it with a certificate.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-balance text-lg text-muted-foreground">
-          Structured training and certification for GS 1207:2018 — built directly on GHBC&apos;s
-          source-backed compliance intelligence, with every module traceable to the code.
+          Structured training for GS 1207:2018 — built directly on GHBC&apos;s source-backed
+          compliance intelligence, with every module traceable to the exact clause and page.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <TrackedButton href="#tracks" event="cta_academy_tracks" size="lg">
-            Explore certification tracks <ArrowRight className="h-4 w-4" />
+          <TrackedButton href="/learn" event="cta_academy_learn" size="lg">
+            Start the free track <ArrowRight className="h-4 w-4" />
           </TrackedButton>
-          <TrackedButton href="#enroll" event="cta_academy_enroll" size="lg" variant="outline">
-            Request enrollment
+          <TrackedButton href="#tracks" event="cta_academy_tracks" size="lg" variant="outline">
+            Explore all tracks
           </TrackedButton>
         </div>
         <div className="mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> 38-part code taxonomy</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Source-backed curriculum</span>
-          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Verified certification</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Publicly verifiable certificate</span>
         </div>
       </section>
 
@@ -125,7 +130,7 @@ export default function AcademyPage() {
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">Certification tracks</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Pick a track, complete the modules, pass the assessment and earn your GHBC credential.
+            Pick a track, complete the modules, pass the assessment and earn your GHBC certificate.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
@@ -148,8 +153,8 @@ export default function AcademyPage() {
                     </li>
                   ))}
                 </ul>
-                <TrackedButton href="#enroll" event="cta_academy_track_apply" props={{ track: t.title }} variant="outline" size="sm" className="mt-auto">
-                  Apply for this track
+                <TrackedButton href={`/learn/${t.slug}`} event="cta_academy_track_open" props={{ track: t.title }} variant="outline" size="sm" className="mt-auto">
+                  {t.slug === "gs1207_core" ? "Start this track" : "View this track"}
                 </TrackedButton>
               </CardContent>
             </Card>
@@ -179,24 +184,32 @@ export default function AcademyPage() {
       <section id="enroll" className="mx-auto max-w-6xl scroll-mt-24 px-6 py-16">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           <div>
-            <h2 className="text-2xl font-bold sm:text-3xl">Request enrollment</h2>
+            <h2 className="text-2xl font-bold sm:text-3xl">Start learning today</h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              Tell us which track fits you (or your organization) and our academy team will
-              confirm the curriculum, schedule and fees. Cohort and organization training available.
+              Begin with the free core track online, or tell us which track fits you (or your
+              organization) and our academy team will confirm the curriculum, schedule and fees.
+              Cohort and organization training available.
             </p>
             <div className="mt-6 space-y-4">
               <div className="flex gap-4">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><GraduationCap className="h-5 w-5" /></div>
                 <div>
-                  <h3 className="font-semibold">Free foundation module</h3>
-                  <p className="text-sm text-muted-foreground">Start with GS 1207 Core Proficiency — the code structure module is open to everyone.</p>
+                  <h3 className="font-semibold">Free foundation track</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Start with GS 1207 Core Proficiency — the code-structure track is open to everyone.{" "}
+                    <Link href="/learn/gs1207_core" className="font-medium text-primary hover:underline">Begin now →</Link>
+                  </p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><FileCheck2 className="h-5 w-5" /></div>
                 <div>
-                  <h3 className="font-semibold">Verified credentials</h3>
-                  <p className="text-sm text-muted-foreground">Certificates document your competency against the GS 1207:2018 framework.</p>
+                  <h3 className="font-semibold">GHBC-issued certificates</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Pass a track&apos;s exam to receive a GHBC certificate of completion with a public
+                    verification link. These are GHBC-issued and are not an accredited professional
+                    licence or a government credential.
+                  </p>
                 </div>
               </div>
             </div>
@@ -209,7 +222,7 @@ export default function AcademyPage() {
         <div className="rounded-2xl bg-sidebar px-8 py-12 text-center text-sidebar-foreground">
           <h2 className="text-2xl font-bold text-white sm:text-3xl">Train your whole team on the code.</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
-            Organization cohorts, custom schedules and group certification for firms,
+            Organization cohorts, custom schedules and group training for firms,
             regulators and developers.
           </p>
           <TrackedButton href="#enroll" event="cta_academy_team" size="lg" className="mt-7 bg-white text-slate-900 hover:opacity-90">

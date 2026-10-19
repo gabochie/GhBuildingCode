@@ -186,25 +186,25 @@ export default function LandingPage() {
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
               <GraduationCap className="h-4 w-4" />
-              Certified Ghana Building Code Academy
+              Ghana Building Code Academy
             </div>
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Learn the code. Earn certified credentials.</h2>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Learn the code. Prove it with a certificate.</h2>
             <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-              Structured training and certification for GS 1207:2018, built on GHBC&apos;s source-backed
+              Structured training for GS 1207:2018, built on GHBC&apos;s source-backed
               compliance intelligence. Tracks for architects, engineers, fire-safety professionals,
-              developers and building control.
+              developers and building control — start free.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <TrackedButton href="/academy" event="cta_academy_explore">
-                Explore the Academy <ArrowRight className="h-4 w-4" />
+              <TrackedButton href="/learn/gs1207_core" event="cta_academy_start_home">
+                Start the free track <ArrowRight className="h-4 w-4" />
               </TrackedButton>
-              <TrackedButton href="/academy#enroll" event="cta_academy_enroll_home" variant="outline">
-                Request enrollment
+              <TrackedButton href="/academy" event="cta_academy_explore_home" variant="outline">
+                Explore the Academy
               </TrackedButton>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {["Certificate of competency", "Free foundation module", "Self-paced + cohorts", "Team training"].map((item) => (
+            {["GHBC-issued certificate", "Free foundation track", "Self-paced + cohorts", "Team training"].map((item) => (
               <div key={item} className="rounded-xl border border-border bg-background p-5">
                 <Check className="h-5 w-5 text-success" />
                 <p className="mt-3 text-sm font-medium">{item}</p>
