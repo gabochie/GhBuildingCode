@@ -21,6 +21,7 @@ const COLUMNS: Array<{
     title: "Resources",
     links: [
       { href: "/academy", label: "Building Code Academy" },
+      { href: "/developers", label: "Developer API", event: "cta_footer_developers" },
       { href: "/blog", label: "Blog" },
       { href: "/blog/feed.xml", label: "RSS Feed" }
     ]
