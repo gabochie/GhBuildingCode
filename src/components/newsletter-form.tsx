@@ -37,20 +37,26 @@ export function NewsletterForm({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full max-w-md gap-2">
-      <Input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        aria-label="Email address"
-        className={compact ? "h-9" : ""}
-      />
-      <Button type="submit" disabled={state === "loading"} variant={compact ? "outline" : "default"}>
-        {state === "loading" ? "Subscribing…" : "Subscribe"}
-      </Button>
-      {state === "error" && <p className="sr-only">{error}</p>}
+    <form onSubmit={onSubmit} className="w-full max-w-md">
+      <div className="flex gap-2">
+        <Input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          aria-label="Email address"
+          className={compact ? "h-9" : ""}
+        />
+        <Button type="submit" disabled={state === "loading"} variant={compact ? "outline" : "default"}>
+          {state === "loading" ? "Subscribing…" : "Subscribe"}
+        </Button>
+      </div>
+      {state === "error" && (
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

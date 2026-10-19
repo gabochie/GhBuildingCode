@@ -1,5 +1,5 @@
 import { getDb, now } from "@/lib/db";
-import { planPrice, addMonthsIso, isExpired, isInGracePeriod, monthlyPeriod, periodMonths, ANNUAL_MONTHS, ANNUAL_BILLED_MONTHS, type BillingPeriod } from "./price";
+import { planPrice, addMonthsIso, isExpired, isInGracePeriod, monthlyPeriod, periodMonths, ANNUAL_MONTHS, ANNUAL_BILLED_MONTHS, GHS_MONTHLY, GHS_ANNUAL, type BillingPeriod } from "./price";
 import { isUserInGracePeriod } from "./subscriptions";
 
 export type { PlanPrice, BillingPeriod } from "./price";
@@ -44,8 +44,8 @@ export const PLANS: Record<string, Plan> = {
     name: "Free",
     tagline: "Try GHBC",
     monthly: "US$0",
-    ghsMonthly: "GH₵0",
-    ghsAnnual: "GH₵0",
+    ghsMonthly: GHS_MONTHLY.free,
+    ghsAnnual: GHS_ANNUAL.free,
     limits: {
       projects: 1,
       aiQuestionsPerMonth: 5,
@@ -70,8 +70,8 @@ export const PLANS: Record<string, Plan> = {
     name: "Professional",
     tagline: "For architects and consultants",
     monthly: "US$29",
-    ghsMonthly: "GH₵399",
-    ghsAnnual: "GH₵3,990",
+    ghsMonthly: GHS_MONTHLY.professional,
+    ghsAnnual: GHS_ANNUAL.professional,
     limits: {
       projects: 10,
       aiQuestionsPerMonth: 100,
@@ -96,8 +96,8 @@ export const PLANS: Record<string, Plan> = {
     name: "Studio",
     tagline: "For practices",
     monthly: "US$99",
-    ghsMonthly: "GH₵1,299",
-    ghsAnnual: "GH₵12,990",
+    ghsMonthly: GHS_MONTHLY.studio,
+    ghsAnnual: GHS_ANNUAL.studio,
     limits: {
       projects: 50,
       aiQuestionsPerMonth: 500,
@@ -121,8 +121,8 @@ export const PLANS: Record<string, Plan> = {
     name: "Enterprise",
     tagline: "For developers, banks, insurers and government",
     monthly: "Custom",
-    ghsMonthly: "Custom",
-    ghsAnnual: "Custom",
+    ghsMonthly: GHS_MONTHLY.enterprise,
+    ghsAnnual: GHS_ANNUAL.enterprise,
     limits: {
       projects: Infinity,
       aiQuestionsPerMonth: Infinity,

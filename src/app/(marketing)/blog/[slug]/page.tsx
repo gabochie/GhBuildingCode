@@ -2,9 +2,9 @@ import { getDb } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { Badge, Button } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { TrackedButton } from "@/components/tracked-cta";
 
 const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
@@ -46,7 +46,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const description = post.meta_description || post.excerpt || undefined;
   const url = `${APP_URL}/blog/${slug}`;
-  const ogImage = post.cover_image || `${APP_URL}/blog/og/${slug}`;
+  // Fallback OG image is a static branded card at /og-default.png (a
+  // /blog/og/[slug] dynamic route does not exist — do not point at it).
+  const ogImage = post.cover_image || `${APP_URL}/og-default.png`;
 
   return {
     title: post.title,
@@ -165,9 +167,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
             Ask GHBC, get source-backed answers, and see a compliance matrix for your project — free to start.
           </p>
-          <Button asChild size="lg" className="bg-white text-slate-900 hover:opacity-90">
-            <Link href="/register" className="mt-6 inline-block">Check a project free</Link>
-          </Button>
+          <TrackedButton href="/register" event="cta_blog_register" size="lg" className="bg-white text-slate-900 hover:opacity-90">
+            Check a project free
+          </TrackedButton>
         </aside>
 
         <aside className="mt-8 rounded-xl border border-border bg-card p-6">

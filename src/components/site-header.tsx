@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TrackedButton } from "@/components/tracked-cta";
 
 const NAV = [
   { href: "/academy", label: "Academy" },
-  { href: "/blog", label: "Blog" }
+  { href: "/blog", label: "Blog" },
+  { href: "/contact", label: "Contact" }
 ];
 
 export function SiteHeader() {
@@ -45,9 +46,9 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-1 md:flex">
           <ThemeToggle />
-          <Button asChild variant="ghost" size="sm"><Link href="/demo">Book a Demo</Link></Button>
-          <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
-          <Button asChild size="sm"><Link href="/register">Get started</Link></Button>
+          <TrackedButton href="/demo" event="cta_header_demo" variant="ghost" size="sm">Book a Demo</TrackedButton>
+          <TrackedButton href="/login" event="cta_header_signin" variant="ghost" size="sm">Sign in</TrackedButton>
+          <TrackedButton href="/register" event="cta_header_get_started" size="sm">Get started</TrackedButton>
         </div>
 
         <div className="flex items-center gap-1 md:hidden">
@@ -81,10 +82,10 @@ export function SiteHeader() {
             ))}
           </div>
           <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
-            <Button asChild variant="outline" size="sm" className="w-full"><Link href="/demo">Book a Demo</Link></Button>
+            <TrackedButton href="/demo" event="cta_header_demo" variant="outline" size="sm" className="w-full">Book a Demo</TrackedButton>
             <div className="grid grid-cols-2 gap-2">
-              <Button asChild variant="ghost" size="sm" className="w-full"><Link href="/login">Sign in</Link></Button>
-              <Button asChild size="sm" className="w-full"><Link href="/register">Get started</Link></Button>
+              <TrackedButton href="/login" event="cta_header_signin" variant="ghost" size="sm" className="w-full">Sign in</TrackedButton>
+              <TrackedButton href="/register" event="cta_header_get_started" size="sm" className="w-full">Get started</TrackedButton>
             </div>
           </div>
         </nav>

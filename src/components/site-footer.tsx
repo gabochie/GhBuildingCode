@@ -1,12 +1,19 @@
 import Link from "next/link";
+import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { SocialLinks } from "@/components/social-icons";
+import { TrackedCta } from "@/components/tracked-cta";
+import { SITE_CONTACT } from "@/config/site-contact";
 
-const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string }> }> = [
+const COLUMNS: Array<{
+  title: string;
+  links: Array<{ href: string; label: string; event?: string }>;
+}> = [
   {
     title: "Product",
     links: [
-      { href: "/register", label: "Check a Project" },
-      { href: "/demo", label: "Book a Demo" },
+      { href: "/register", label: "Check a Project", event: "cta_footer_check_project" },
+      { href: "/demo", label: "Book a Demo", event: "cta_footer_book_demo" },
       { href: "/login", label: "Sign in" }
     ]
   },
@@ -25,6 +32,10 @@ const COLUMNS: Array<{ title: string; links: Array<{ href: string; label: string
       { href: "/terms", label: "Terms of Use" },
       { href: "/privacy", label: "Privacy Policy" }
     ]
+  },
+  {
+    title: "Contact",
+    links: [{ href: "/contact", label: "Contact us", event: "cta_footer_contact" }]
   }
 ];
 
@@ -32,8 +43,8 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid gap-10 md:grid-cols-4">
-          <div>
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-black text-primary-foreground">G</span>
               GHBC
@@ -45,6 +56,7 @@ export function SiteFooter() {
             <p className="mt-3 text-xs text-muted-foreground">
               Every finding traces to its regulatory source: document, part, section, clause and page.
             </p>
+            <SocialLinks className="mt-4" />
           </div>
           {COLUMNS.map((col) => (
             <div key={col.title}>
@@ -52,12 +64,49 @@ export function SiteFooter() {
               <ul className="mt-3 space-y-2">
                 {col.links.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                      {l.label}
-                    </Link>
+                    {l.event ? (
+                      <TrackedCta
+                        href={l.href}
+                        event={l.event}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {l.label}
+                      </TrackedCta>
+                    ) : (
+                      <Link href={l.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                        {l.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
+              {col.title === "Contact" && (
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li>
+                    <a href={`mailto:${SITE_CONTACT.email}`} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                      <Mail className="h-3.5 w-3.5 shrink-0" /> {SITE_CONTACT.email}
+                    </a>
+                  </li>
+                  <li>
+                    <a href={SITE_CONTACT.phoneHref} className="inline-flex items-center gap-2 transition-colors hover:text-foreground">
+                      <Phone className="h-3.5 w-3.5 shrink-0" /> {SITE_CONTACT.phoneDisplay}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href={SITE_CONTACT.whatsappHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 shrink-0" /> WhatsApp
+                    </a>
+                  </li>
+                  <li className="inline-flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {SITE_CONTACT.location}
+                  </li>
+                </ul>
+              )}
             </div>
           ))}
         </div>

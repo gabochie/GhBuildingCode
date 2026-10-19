@@ -1,4 +1,5 @@
 import { LegalPage } from "@/components/legal-page";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,7 +54,9 @@ export default function PrivacyPage() {
       <h2>7. Your rights</h2>
       <p>
         You may access, correct or delete your personal data, or export your project data, by
-        contacting us. You may also delete your account at any time.
+        <Link href="/contact" className="font-medium text-primary hover:underline"> contacting us</Link> or emailing{" "}
+        <a href="mailto:support@ghbc.gabochie.com" className="font-medium text-primary hover:underline">support@ghbc.gabochie.com</a>.
+        You may also delete your account at any time.
       </p>
 
       <h2>8. Security</h2>

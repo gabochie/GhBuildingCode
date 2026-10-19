@@ -4,32 +4,35 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { TrackedButton } from "@/components/tracked-cta";
 import { Check, Sparkles } from "lucide-react";
+import { GHS_MONTHLY, GHS_ANNUAL } from "@/lib/billing/price";
 
-// Public pricing display data (no DB import — keeps this a browser-safe client
-// component). Mirrors src/lib/billing/plans.ts GHS pricing. Annual = 2 months free.
+// Public pricing display data. Prices come from the shared GHS map in
+// src/lib/billing/price.ts (the same source billing uses) so marketing copy
+// can never drift from what customers are actually charged.
+// Taglines and feature bullets are marketing-specific. Annual = 2 months free.
 const pricing = [
   {
     id: "free",
     name: "Free",
     tagline: "Try GHBC",
-    monthly: "GH₵0",
-    annual: "GH₵0",
+    monthly: GHS_MONTHLY.free,
+    annual: GHS_ANNUAL.free,
     features: ["Ghana Building Code explorer", "1 project", "5 AI questions / month", "Basic permit checklist"]
   },
   {
     id: "professional",
     name: "Professional",
     tagline: "For architects and consultants",
-    monthly: "GH₵399",
-    annual: "GH₵3,990",
+    monthly: GHS_MONTHLY.professional,
+    annual: GHS_ANNUAL.professional,
     features: ["Multiple projects (10)", "AI copilot with project context", "Compliance reviews", "PDF compliance reports"]
   },
   {
     id: "studio",
     name: "Studio",
     tagline: "For practices",
-    monthly: "GH₵1,299",
-    annual: "GH₵12,990",
+    monthly: GHS_MONTHLY.studio,
+    annual: GHS_ANNUAL.studio,
     features: ["Everything in Professional", "Advanced compliance", "Authority intelligence", "API access (3 keys)"]
   }
 ];
@@ -69,7 +72,9 @@ export default function PricingSection() {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">{price}<span className="text-sm font-normal text-muted-foreground"> {unit}</span></p>
-                {period === "annual" && p.id !== "free" ? (
+                {p.id === "free" ? (
+                  <p className="mt-1 text-xs font-medium text-success">No card required — start in under a minute</p>
+                ) : period === "annual" && p.id !== "free" ? (
                   <p className="mt-1 text-xs font-medium text-primary">{p.monthly} /mo — 2 months free</p>
                 ) : null}
                 <ul className="mt-4 space-y-2">
@@ -80,7 +85,7 @@ export default function PricingSection() {
                   ))}
                 </ul>
                 <TrackedButton
-                  href="/register"
+                  href={`/register?plan=${p.id}&period=${period}`}
                   event="cta_pricing"
                   props={{ plan: p.id, period }}
                   className="mt-5 w-full"

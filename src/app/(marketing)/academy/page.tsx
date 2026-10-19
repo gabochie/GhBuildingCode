@@ -12,7 +12,9 @@ export const metadata: Metadata = {
     title: "Ghana Building Code Academy — Certified Training & Certification",
     description:
       "Structured training and certification for GS 1207:2018 — the Ghana Building Code — powered by GHBC's source-backed compliance intelligence.",
-    type: "website"
+    type: "website",
+    siteName: "GHBC",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Ghana Building Code Academy" }]
   }
 };
 
@@ -67,7 +69,7 @@ const STEPS = [
 
 export default function AcademyPage() {
   return (
-    <main>
+    <div>
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-16 text-center">
         <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
           <GraduationCap className="h-4 w-4" />
@@ -215,6 +217,6 @@ export default function AcademyPage() {
           </TrackedButton>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

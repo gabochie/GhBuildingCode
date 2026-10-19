@@ -1,4 +1,5 @@
 import { LegalPage } from "@/components/legal-page";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -46,9 +47,9 @@ export default function TermsPage() {
 
       <h2>6. Intellectual property</h2>
       <p>
-        The GHBC software, branding and design are owned by GHBC. The Ghana Building Code and
-        related regulations remain the property of their respective right holders and are used
-        under license, authorization or applicable exceptions.
+        The GHBC software, branding and design are owned by GHBC, a Gabochie Design product.
+        The Ghana Building Code and related regulations remain the property of their respective
+        right holders and are used under license, authorization or applicable exceptions.
       </p>
 
       <h2>7. Termination</h2>
@@ -67,6 +68,14 @@ export default function TermsPage() {
       <p>
         We may update these terms from time to time. Continued use after changes constitutes
         acceptance. Material changes will be noted by an updated &ldquo;last updated&rdquo; date.
+      </p>
+
+      <h2>10. Contact</h2>
+      <p>
+        GHBC is a product of Gabochie Design, based in Tema, Ghana. Questions about these terms:
+        email <a href="mailto:support@ghbc.gabochie.com" className="font-medium text-primary hover:underline">support@ghbc.gabochie.com</a>,
+        call +233 24 326 2019, or see our <Link href="/contact" className="font-medium text-primary hover:underline">contact page</Link>.
+        Full details: Klagon Newsite, Tema, Ghana.
       </p>
     </LegalPage>
   );

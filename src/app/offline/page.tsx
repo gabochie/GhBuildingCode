@@ -1,9 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Button } from "@/components/ui";
 import { OfflineRetry } from "@/components/offline-retry";
 import { CloudOff } from "lucide-react";
 
 export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  title: "You're offline",
+  description: "GHBC needs a connection for compliance checks, projects and documents. Reconnect and try again.",
+  robots: { index: false, follow: false }
+};
 
 export default function OfflinePage() {
   return (

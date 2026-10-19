@@ -4,6 +4,8 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/u
 import { TrackedButton, TrackedCta } from "@/components/tracked-cta";
 import { NewsletterForm } from "@/components/newsletter-form";
 import PricingSection from "@/components/pricing-section";
+import { CodeSearchPreview } from "@/components/code-search-preview";
+import { ProductPreview } from "@/components/product-preview";
 import {
   MessageSquareText,
   ShieldCheck,
@@ -25,7 +27,8 @@ export const metadata: Metadata = {
     title: "GHBC — Ghana Building Compliance Intelligence",
     description: "AI-powered compliance intelligence for the Ghana Building Code (GS 1207:2018). Search 27,000+ requirements, check your project, find gaps, build with confidence.",
     type: "website",
-    siteName: "GHBC"
+    siteName: "GHBC",
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "GHBC — Ghana Building Compliance Intelligence" }]
   }
 };
 
@@ -96,7 +99,34 @@ export default function LandingPage() {
         <div className="mx-auto mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> 27,000+ requirements searchable</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Source-backed citations</span>
-          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Free to start</span>
+          <span className="flex items-center gap-2"><Check className="h-4 w-4 text-success" /> Free to start — no card required</span>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16">
+        <CodeSearchPreview />
+        <div className="mt-10">
+          <ProductPreview />
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-card">
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">Why teams check with GHBC</h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { title: "Sourced from the GSA", body: "Built on the Ghana Standards Authority’s GS 1207:2018 — the controlled regulatory source." },
+              { title: "27,000+ requirements", body: "A structured, searchable index of the code — not a PDF you have to skim." },
+              { title: "Every claim is cited", body: "Document, part, section, clause and page — so you can verify every finding." },
+              { title: "Designed and built in Ghana", body: "Made for Ghanaian assemblies, authorities and permit processes." }
+            ].map((t) => (
+              <div key={t.title} className="rounded-xl border border-border bg-background p-5">
+                <Check className="h-5 w-5 text-success" />
+                <h3 className="mt-3 font-semibold">{t.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -108,6 +138,9 @@ export default function LandingPage() {
                 <CardHeader>
                   <f.icon className="mb-2 h-7 w-7 text-primary" />
                   <CardTitle>{f.title}</CardTitle>
+                  <span className="mt-1 inline-flex w-fit rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    Free account required
+                  </span>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">{f.body}</p>
@@ -138,7 +171,7 @@ export default function LandingPage() {
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Simple, local pricing</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Pay in Ghana cedis via mobile money or card. Start free — upgrade when your projects do.
+            Pay in Ghana cedis via mobile money or card. Start free — no card required. Upgrade when your projects do.
           </p>
         </div>
         <PricingSection />

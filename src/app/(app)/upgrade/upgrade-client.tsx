@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Label, Select, Textarea } from "@/components/ui";
 import { Check, Loader2, Building2 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { GHS_MONTHLY, GHS_ANNUAL } from "@/lib/billing/price";
 
 interface GatewayInfo {
   id: string;
@@ -17,21 +18,23 @@ interface PlanPriceInfo {
   price: { currency: string; amountMinor: string; label: string };
 }
 
+// Prices come from the shared GHS map (src/lib/billing/price.ts) — the same
+// source billing uses — so the upgrade page can never drift from what is charged.
 const PLANS = [
   {
     id: "professional",
     name: "Professional",
     tagline: "For architects and consultants",
-    monthly: "GH₵399 / mo",
-    annual: "GH₵3,990 / yr",
+    monthly: `${GHS_MONTHLY.professional} / mo`,
+    annual: `${GHS_ANNUAL.professional} / yr`,
     features: ["Multiple projects (10)", "AI copilot with project context", "Compliance reviews", "Document uploads", "PDF compliance reports", "Project history"]
   },
   {
     id: "studio",
     name: "Studio",
     tagline: "For practices",
-    monthly: "GH₵1,299 / mo",
-    annual: "GH₵12,990 / yr",
+    monthly: `${GHS_MONTHLY.studio} / mo`,
+    annual: `${GHS_ANNUAL.studio} / yr`,
     features: ["Everything in Professional", "Advanced compliance", "Authority intelligence", "API access (3 keys)", "Project templates"]
   }
 ];
