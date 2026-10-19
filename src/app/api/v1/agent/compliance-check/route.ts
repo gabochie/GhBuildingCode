@@ -5,7 +5,8 @@ import { RULE_LIBRARY } from "@/lib/rules/seed-rules";
 import { searchRequirements } from "@/lib/ai/retrieval";
 import { occupancyGroups } from "@/lib/compliance/check";
 import { authenticateAgent, logUsage } from "@/lib/auth/api-key";
-import { ok, unauthorized, badRequest, handleError } from "@/lib/api";
+import { ok, unauthorized, badRequest, handleError, tooManyRequests } from "@/lib/api";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const schema = z.object({
   project_type: z.string().optional(),
@@ -24,9 +25,15 @@ const schema = z.object({
 export async function POST(req: Request) {
   const started = Date.now();
   const requestId = randomUUID();
-  const apiKey = await authenticateAgent(req);
-  if (!apiKey) return unauthorized("Valid GHBC API key required (Authorization: Bearer <key>).");
+  const apiKey = await authenticateAgent(req, { requiredScopes: ["compliance:check"] });
+  if (!apiKey) return unauthorized("Valid GHBC API key with compliance:check scope required (Authorization: Bearer <key>).");
   try {
+    const rl = await rateLimit("agent", String(apiKey.id));
+    if (!rl.allowed) {
+      await logUsage({ apiKeyId: String(apiKey.id), endpoint: "/agent/compliance-check", method: "POST", statusCode: 429, latencyMs: Date.now() - started, requestId });
+      return tooManyRequests("Rate limit exceeded for this API key.", rateLimitHeaders(rl));
+    }
+
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) {
       await logUsage({ apiKeyId: String(apiKey.id), endpoint: "/agent/compliance-check", method: "POST", statusCode: 400, latencyMs: Date.now() - started, requestId });

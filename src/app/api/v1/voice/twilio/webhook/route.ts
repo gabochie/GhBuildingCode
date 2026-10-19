@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getDb, uid, now } from "@/lib/db";
 import { answerQuestion } from "@/lib/ai/rag";
 import { saveLead } from "@/lib/voice/lead-capture";
+import { clientIp } from "@/lib/api";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
+import { validateTwilioSignature, formParams } from "@/lib/voice/twilio-signature";
 import {
   twiml,
   say,
@@ -28,6 +31,24 @@ function callerPhone(formData: FormData): string {
 
 export async function POST(req: Request) {
   const form = await req.formData();
+
+  // Authenticate the caller: only Twilio (holding the account auth token) can
+  // produce a valid X-Twilio-Signature. Fail closed when unconfigured/invalid.
+  const signatureOk = validateTwilioSignature({
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    signature: req.headers.get("x-twilio-signature"),
+    url: req.url,
+    params: formParams(form)
+  });
+  if (!signatureOk) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  const rl = await rateLimit("voice", clientIp(req));
+  if (!rl.allowed) {
+    return new NextResponse("Too Many Requests", { status: 429, headers: rateLimitHeaders(rl) });
+  }
+
   const action = (form.get("action") as string) || "ask";
   const db = await getDb();
   const phone = callerPhone(form);

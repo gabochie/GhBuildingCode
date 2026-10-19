@@ -101,3 +101,44 @@ test("periodMonths maps billing periods to activation months", () => {
   assert.equal(ANNUAL_MONTHS, 12);
   assert.equal(ANNUAL_BILLED_MONTHS, 10);
 });
+
+test("Moolre webhook rejects payloads without the callback secret", async () => {
+  const { MoolreGateway } = await import("../src/lib/billing/payments/moolre.ts");
+  const gw = new MoolreGateway({
+    id: "moolre",
+    label: "Moolre (MoMo)",
+    enabled: true,
+    baseUrl: "https://api.moolre.com",
+    apiKey: "pk",
+    accountNumber: "123",
+    webhookSecret: "expected-secret"
+  });
+
+  const body = JSON.stringify({
+    status: 1,
+    code: "P01",
+    data: { txstatus: 1, externalref: "ref1", transactionid: "t1", amount: "399" }
+  });
+
+  // No secret at all
+  assert.equal(await gw.handleWebhook(new Request("https://x/api", { method: "POST", body })), null);
+
+  // Wrong secret
+  const wrong = JSON.stringify({
+    status: 1,
+    code: "P01",
+    data: { txstatus: 1, externalref: "ref1", transactionid: "t1", secret: "nope" }
+  });
+  assert.equal(await gw.handleWebhook(new Request("https://x/api", { method: "POST", body: wrong })), null);
+
+  // Correct secret -> parsed event
+  const good = JSON.stringify({
+    status: 1,
+    code: "P01",
+    data: { txstatus: 1, externalref: "ref1", transactionid: "t1", amount: "399", secret: "expected-secret" }
+  });
+  const event = await gw.handleWebhook(new Request("https://x/api", { method: "POST", body: good }));
+  assert.ok(event);
+  assert.equal(event.reference, "ref1");
+  assert.equal(event.status, "paid");
+});

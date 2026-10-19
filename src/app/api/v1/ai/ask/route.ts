@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { answerQuestion } from "@/lib/ai/rag";
-import { ok, badRequest, unauthorized, limitReached, handleError, tooManyRequests } from "@/lib/api";
+import { ok, badRequest, unauthorized, limitReached, handleError, tooManyRequests, notFound } from "@/lib/api";
 import { consumeQuota } from "@/lib/billing/plans";
 import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
@@ -29,7 +29,15 @@ export async function POST(req: Request) {
     const chk = await consumeQuota(session.sub, session.plan, "aiQuestionsPerMonth");
     if (!chk.allowed) return limitReached("AI questions", chk.used, chk.limit, session.plan, undefined, chk.gracePeriod);
     let convId = conversation_id;
-    if (!convId) {
+    if (convId) {
+      // Ownership check: a caller-supplied conversation id must belong to the
+      // authenticated user, otherwise posting would inject messages into
+      // someone else's conversation. 404 (not 403) avoids confirming existence.
+      const owned = (await db
+        .prepare("SELECT id FROM ai_conversations WHERE id = ? AND user_id = ?")
+        .get(convId, session.sub)) as { id: string } | undefined;
+      if (!owned) return notFound("Conversation not found.");
+    } else {
       convId = uid("conv");
       await db.prepare("INSERT INTO ai_conversations (id, user_id, project_id, title, created_at) VALUES (?, ?, ?, ?, ?)").run(
         convId, session.sub, project_id ?? null, question.slice(0, 80), now()

@@ -14,7 +14,7 @@ export function isApiKeyFormat(key: string): boolean {
   return key.startsWith("ghbc_live_");
 }
 
-export async function authenticateAgent(req: Request) {
+export async function authenticateAgent(req: Request, opts: { requiredScopes?: string[] } = {}) {
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token || !isApiKeyFormat(token)) return null;
@@ -24,6 +24,12 @@ export async function authenticateAgent(req: Request) {
     | Record<string, unknown>
     | undefined;
   if (!row) return null;
+  if (opts.requiredScopes?.length) {
+    const scopes = scopesOf(row);
+    for (const scope of opts.requiredScopes) {
+      if (!scopes.includes(scope)) return null;
+    }
+  }
   await db.prepare("UPDATE api_keys SET last_used_at = ? WHERE id = ?").run(now(), row.id);
   return row;
 }

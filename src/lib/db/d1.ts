@@ -114,11 +114,41 @@ class D1DB implements BoundDB {
 let localDb: LocalDB | null = null;
 
 /**
+ * True when we are running inside the Cloudflare Workers runtime.
+ * On Workers better-sqlite3 cannot load (native addon), so any code path that
+ * reaches the SQLite fallback there would fail with an opaque error anyway.
+ */
+function isCloudflareWorkers(): boolean {
+  try {
+    const ua = (globalThis as { navigator?: { userAgent?: string } }).navigator?.userAgent;
+    return typeof ua === "string" && ua.toLowerCase().includes("cloudflare");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when no D1 binding is available and we must not invent one: either we
+ * are in the Workers runtime (where a file-backed SQLite would not persist) or
+ * we are in a production Node runtime. Falls through to `false` during
+ * `next build` (NEXT_PHASE=phase-production-build) so static prerendering can
+ * still use the local dev database.
+ */
+function isProductionRuntime(): boolean {
+  if (isCloudflareWorkers()) return true;
+  return process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build";
+}
+
+/**
  * Create a BoundDB instance.
  * - In Cloudflare Workers: pass D1 binding from env
  * - In local dev/tests: call with no args (uses better-sqlite3)
  *
  * All methods are async — callers must use `await`.
+ *
+ * Fails closed: if the D1 binding cannot be resolved in production the call
+ * throws instead of silently serving/accumulating data in an ephemeral local
+ * SQLite file that is discarded on the next isolate restart.
  */
 export async function createDb(d1?: D1Database): Promise<BoundDB> {
   // Explicit D1 binding passed in
@@ -135,13 +165,21 @@ export async function createDb(d1?: D1Database): Promise<BoundDB> {
       return new D1DB(envD1 as D1Database);
     }
   } catch {
-    // Not in OpenNext environment — fall through to local DB
+    // Not in OpenNext environment — fall through
   }
 
   // Fallback: check process.env directly (wrangler dev injects bindings here)
   const envD1 = (process.env as Record<string, unknown>).DB;
   if (envD1 && typeof envD1 === "object" && "prepare" in (envD1 as Record<string, unknown>)) {
     return new D1DB(envD1 as D1Database);
+  }
+
+  if (isProductionRuntime()) {
+    throw new Error(
+      '[ghbc] D1 binding "DB" is not available in a production runtime. ' +
+        "Refusing to fall back to a local SQLite database (it would be ephemeral in Workers). " +
+        "Check the wrangler.jsonc d1_databases binding."
+    );
   }
 
   if (!localDb) {

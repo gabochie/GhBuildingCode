@@ -109,14 +109,28 @@ export async function resolveWebhook(gatewayId: string, req: Request): Promise<{
     .get(event.reference)) as { id: string; user_id: string; plan: string; status: string; gateway_ref: string | null; amount_minor: string } | undefined;
   if (!payment) return { valid: true, event }; // unknown reference — ignore silently
 
-  // Authoritative re-query for ExpressPay (pending->paid). Moolre event already
-  // carries status; re-checking is harmless and keeps verification consistent.
-  let status: PaymentStatus = event.status;
+  // Authoritative re-query: the gateway's own verify() is the source of truth.
+  // Fail closed — if we cannot reach the gateway we do NOT trust the
+  // webhook-reported status (a forged "paid" would otherwise activate a plan
+  // during any gateway-unreachable window). The gateway will retry.
+  let status: PaymentStatus;
+  let verifiedAmount: string | null = null;
   try {
     const verified = await gw.verify({ reference: event.reference, gatewayRef: event.gatewayRef ?? payment.gateway_ref });
-    if (verified.status !== "pending" || status === "pending") status = verified.status;
+    status = verified.status;
+    verifiedAmount = verified.amountMinor ?? null;
   } catch {
-    /* gateway unreachable — trust the reported webhook status */
+    return { valid: true, event }; // unverifiable — leave payment untouched
+  }
+
+  // Amount check: if the gateway reports an amount it must match what we
+  // charged, otherwise treat the notification as fraudulent.
+  if (status === "paid" && verifiedAmount !== null && verifiedAmount !== "") {
+    const reported = Number(verifiedAmount);
+    const expected = Number(payment.amount_minor);
+    if (Number.isFinite(reported) && Number.isFinite(expected) && Math.abs(reported - expected) > 1) {
+      return { valid: true, event }; // amount mismatch — do not activate
+    }
   }
 
   // Idempotency: only transition once.

@@ -1,4 +1,4 @@
-import { moolreConfig, type MoolreConfig } from "./config";
+import { moolreConfig, type MoolreConfig } from "./config.ts";
 import type { PaymentGateway, InitiateResult, VerifyResult, WebhookEvent } from "./gateway";
 import type { PaymentStatus } from "./gateway";
 
@@ -95,8 +95,16 @@ export class MoolreGateway implements PaymentGateway {
   async handleWebhook(req: Request): Promise<WebhookEvent | null> {
     const raw = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     if (!raw) return null;
-    // webhook payload documented as: { status, code, message, data: { txstatus, transactionid, externalref, ts } }
+    // webhook payload documented as: { status, code, message, data: { txstatus, transactionid, externalref, ts, secret } }
     const data = (raw.data ?? raw) as Record<string, unknown>;
+
+    // Authenticate the callback before extracting anything: Moolre includes
+    // the integration's callback secret in data.secret. Compare timing-safe.
+    const providedSecret = this.readString(data, ["secret"]);
+    if (!this.cfg.webhookSecret || !providedSecret || !(await timingSafeEqual(providedSecret, this.cfg.webhookSecret))) {
+      return null;
+    }
+
     const reference = this.readString(raw, ["externalref", "order_ref", "reference"]) ?? this.readString(data, ["externalref", "reference"]);
     if (!reference) return null;
     const statusRaw = this.readString(data, ["txstatus", "status"]);
@@ -132,4 +140,20 @@ export class MoolreGateway implements PaymentGateway {
     if (digits.startsWith("0")) return `233${digits.slice(1)}`;
     return digits || "233000000000";
   }
+}
+
+/**
+ * Constant-time string comparison: hashes both sides to a fixed 32 bytes so
+ * neither the value nor the length of the expected secret can be inferred
+ * from response timing.
+ */
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const digest = (s: string) => crypto.subtle.digest("SHA-256", enc.encode(s));
+  const [ha, hb] = await Promise.all([digest(a), digest(b)]);
+  const va = new Uint8Array(ha);
+  const vb = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
 }

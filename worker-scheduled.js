@@ -14,6 +14,7 @@
 // @ts-nocheck
 /* eslint-disable no-console, import/no-anonymous-default-export */
 import openNextWorker from "./.open-next/worker.js";
+import { SECURITY_HEADERS } from "./security-headers.mjs";
 
 // `wrangler.jsonc` re-points `main` here; keep OpenNext's exported classes so the
 // Durable Object queue / tag-cache / bucket-purge bindings keep resolving.
@@ -64,8 +65,33 @@ async function runBillingSweep(env, ctx) {
   );
 }
 
+/**
+ * Attach security headers to a Worker response without disturbing the body
+ * stream. Responses that already set a header win (an explicit per-route
+ * override is preserved). WebSocket upgrades (101) are passed through
+ * untouched because a 101 response cannot be reconstructed.
+ */
+function withSecurityHeaders(res) {
+  if (!(res instanceof Response)) return res;
+  if (res.status === 101 || res.webSocket) return res;
+  if (res.headers.get("Upgrade")?.toLowerCase() === "websocket") return res;
+  const headers = new Headers(res.headers);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!headers.has(key)) headers.set(key, value);
+  }
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
+}
+
+async function handleFetch(request, env, ctx) {
+  return withSecurityHeaders(await openNextWorker.fetch(request, env, ctx));
+}
+
 export default {
-  fetch: openNextWorker.fetch,
+  fetch: handleFetch,
   async scheduled(controller, env, ctx) {
     const cron = controller?.cron || "*";
     console.log(`[cron] triggered ${cron}`);

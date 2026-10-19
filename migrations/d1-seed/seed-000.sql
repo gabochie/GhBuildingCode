@@ -1,11 +1,11 @@
 PRAGMA foreign_keys = OFF;
-INSERT OR IGNORE INTO "users" ("id", "email", "password_hash", "name", "role", "plan", "created_at", "updated_at") VALUES ('usr-admin','admin@ghbc.gabochie.com','!locked-password-hash','GHBC Admin','admin','enterprise','2026-08-15 13:56:15','2026-08-15 13:56:15'),
-('usr_msugs40bw0kwus56','test@ghbc.gabochie.com','!locked-password-hash','Test User','user','free','2026-08-15 14:21:26','2026-08-15 14:21:26'),
+INSERT OR IGNORE INTO "users" ("id", "email", "password_hash", "name", "role", "plan", "created_at", "updated_at") VALUES ('usr-admin','redacted-admin@example.invalid','!locked-password-hash','GHBC Admin','admin','enterprise','2026-08-15 13:56:15','2026-08-15 13:56:15'),
+('usr_msugs40bw0kwus56','redacted-test@example.invalid','!locked-password-hash','Test User','user','free','2026-08-15 14:21:26','2026-08-15 14:21:26'),
 ('usr_msujvs6jjklrr0rt','redacted-lead5@example.invalid','!locked-password-hash','Lead Test5','user','professional','2026-08-15 15:48:16','2026-08-15T15:49:00.417Z'),
 ('usr_msunoyhpc0lgv4d5','redacted-buildcostgh@example.invalid','!locked-password-hash','BuildCostGH','user','free','2026-08-15 17:34:56','2026-08-15 17:34:56'),
-('usr-user-msurxii0njk7','demo@ghbc.gabochie.com','!locked-password-hash','Demo User','user','free','2026-08-15 19:33:34','2026-08-15 19:33:34'),
-('usr-user-msurxiqj8ufz','pro@ghbc.gabochie.com','!locked-password-hash','Pro Demo','user','pro','2026-08-15 19:33:34','2026-08-15 19:33:34'),
-('usr-user-msurxiz1d45u','team@ghbc.gabochie.com','!locked-password-hash','Team Demo','user','enterprise','2026-08-15 19:33:34','2026-08-15 19:33:34');
+('usr-user-msurxii0njk7','redacted-demo@example.invalid','!locked-password-hash','Demo User','user','free','2026-08-15 19:33:34','2026-08-15 19:33:34'),
+('usr-user-msurxiqj8ufz','redacted-pro@example.invalid','!locked-password-hash','Pro Demo','user','pro','2026-08-15 19:33:34','2026-08-15 19:33:34'),
+('usr-user-msurxiz1d45u','redacted-team@example.invalid','!locked-password-hash','Team Demo','user','enterprise','2026-08-15 19:33:34','2026-08-15 19:33:34');
 INSERT OR IGNORE INTO "regulation_versions" ("id", "regulation_id", "version", "effective_date", "status", "notes", "created_at") VALUES ('RV-GS1207-2018','REG-GS1207-2018','2018','2018','current','First published edition','2026-08-15 13:56:12');
 INSERT OR IGNORE INTO "regulations" ("id", "title", "authority_id", "document_type", "jurisdiction", "publication_date", "effective_date", "version", "status", "source_url", "copyright_status", "license_status", "supersedes", "superseded_by", "content_hash", "page_count") VALUES ('REG-GS1207-2018','Ghana Building Code (GS 1207:2018)','AUTH-GSA','building_code','Ghana','2018','2018','2018','active',NULL,'controlled_source','authorized_access',NULL,NULL,NULL,1436);
 INSERT OR IGNORE INTO "parts" ("id", "part_no", "title", "regulation_id", "description") VALUES ('PART-01',1,'PART 1: SCOPE AND ADMINISTRATION','REG-GS1207-2018',NULL),

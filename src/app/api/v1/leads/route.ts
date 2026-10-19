@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { getDb, uid, now } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
-import { ok, badRequest, requireAdmin, handleError } from "@/lib/api";
+import { ok, badRequest, requireAdmin, handleError, tooManyRequests, clientIp } from "@/lib/api";
 import { saveLead } from "@/lib/voice/lead-capture";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 // Optional fields in forms send empty strings (e.g. an unselected topic), so
 // allow "" to be treated as "not provided" rather than rejecting it.
@@ -22,6 +23,9 @@ const postSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const rl = await rateLimit("leads", clientIp(req));
+    if (!rl.allowed) return tooManyRequests("Too many submissions from this address. Please try again later.", rateLimitHeaders(rl));
+
     const parsed = postSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return badRequest("Invalid lead payload.");
 

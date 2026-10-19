@@ -13,7 +13,11 @@ export const NAMED_LIMITS: Record<string, RateLimitConfig> = {
   register: { limit: 5, windowMs: 3_600_000 }, // 5 registrations / hour
   forgot: { limit: 5, windowMs: 900_000 }, // 5 password-reset requests / 15 min
   ask: { limit: 30, windowMs: 60_000 }, // 30 AI questions / minute (defense in depth)
-  email: { limit: 10, windowMs: 3_600_000 } // generic email-triggering action / hour
+  email: { limit: 10, windowMs: 3_600_000 }, // generic email-triggering action / hour
+  leads: { limit: 10, windowMs: 3_600_000 }, // 10 public lead submissions / hour / IP
+  search: { limit: 60, windowMs: 60_000 }, // 60 public searches / minute / IP
+  voice: { limit: 30, windowMs: 60_000 }, // 30 Twilio voice turns / minute / IP
+  agent: { limit: 120, windowMs: 60_000 } // 120 agent API calls / minute / key
 };
 
 export function bucketStart(nowMs: number, windowMs: number): number {

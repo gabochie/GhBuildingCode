@@ -1,15 +1,10 @@
 import type { NextConfig } from "next";
+import { SECURITY_HEADERS } from "./security-headers.mjs";
 
-const securityHeaders = [
-  { key: "X-Frame-Options", value: "DENY" },
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload"
-  }
-];
+// Single source of truth for security headers: this file (next dev / prerender),
+// `worker-scheduled.js` (every dynamic response) and `public/_headers` (static
+// assets) all derive from `security-headers.mjs`.
+const securityHeaders = Object.entries(SECURITY_HEADERS).map(([key, value]) => ({ key, value }));
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "pdf-parse"],

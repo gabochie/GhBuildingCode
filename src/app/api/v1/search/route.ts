@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { getDb, now, uid } from "@/lib/db";
 import { searchChunks, searchDefinitions, searchRequirements } from "@/lib/ai/retrieval";
-import { ok, badRequest, handleError } from "@/lib/api";
+import { ok, badRequest, handleError, tooManyRequests, clientIp } from "@/lib/api";
+import { rateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 
 const schema = z.object({
   q: z.string().min(2).max(300),
@@ -11,6 +12,9 @@ const schema = z.object({
 
 export async function GET(req: Request) {
   try {
+    const rl = await rateLimit("search", clientIp(req));
+    if (!rl.allowed) return tooManyRequests("Too many searches. Please slow down.", rateLimitHeaders(rl));
+
     const url = new URL(req.url);
     const parsed = schema.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return badRequest("Invalid query parameters.");

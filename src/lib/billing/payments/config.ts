@@ -34,7 +34,9 @@ export function moolreConfig(overrides: Record<string, string> = {}): MoolreConf
   const apiKey = overrides.apiKey ?? env("MOOLRE_API_KEY") ?? "";
   const accountNumber = overrides.accountNumber ?? env("MOOLRE_ACCOUNT_NUMBER") ?? "";
   const webhookSecret = overrides.webhookSecret ?? env("MOOLRE_WEBHOOK_SECRET") ?? "";
-  const enabled = isConfigured(apiKey, accountNumber);
+  // The callback secret is required: without it a webhook cannot be
+  // authenticated, so the gateway is not considered usable at all.
+  const enabled = isConfigured(apiKey, accountNumber, webhookSecret);
   return {
     id: "moolre",
     label: "Moolre (MoMo)",
