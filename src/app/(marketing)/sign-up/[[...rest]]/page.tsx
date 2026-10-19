@@ -32,6 +32,14 @@ export default async function SignUpPage({
       ? `${annual ? GHS_ANNUAL[planKey] : GHS_MONTHLY[planKey]}${annual ? "/yr" : "/mo"}`
       : undefined;
 
+  // Carry the chosen paid plan through sign-up so it isn't silently dropped.
+  // Clerk stores no plan on a self-signup, so we hand the user straight to
+  // Upgrade (where billing is explicitly confirmed) instead of the dashboard.
+  const upgradeUrl =
+    planKey && planKey !== "free"
+      ? `/upgrade?plan=${planKey}${annual ? "&period=annual" : ""}`
+      : undefined;
+
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 py-16">
       {planName && (
@@ -47,7 +55,13 @@ export default async function SignUpPage({
           )}
         </div>
       )}
-      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+      <SignUp
+        routing="path"
+        path="/sign-up"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl={upgradeUrl ?? "/dashboard"}
+        forceRedirectUrl={upgradeUrl}
+      />
       <p className="text-xs text-muted-foreground">
         Already have an account?{" "}
         <Link href="/sign-in" className="font-medium text-primary hover:underline">Sign in</Link>

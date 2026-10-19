@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Input, Label, Select, Textarea } from "@/components/ui";
 import { Check, Loader2, Building2 } from "lucide-react";
@@ -40,8 +41,19 @@ const PLANS = [
 ];
 
 export default function UpgradeClient({ currentPlan, email }: { currentPlan: string; email: string }) {
-  const [plan, setPlan] = useState(currentPlan === "free" ? "professional" : (currentPlan === "professional" || currentPlan === "studio" ? currentPlan : "professional"));
-  const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
+  const searchParams = useSearchParams();
+  const requestedPlan = searchParams.get("plan");
+  const requestedPeriod = searchParams.get("period");
+  const initialPlan =
+    requestedPlan && PLANS.some((p) => p.id === requestedPlan)
+      ? requestedPlan
+      : currentPlan === "free"
+        ? "professional"
+        : currentPlan === "professional" || currentPlan === "studio"
+          ? currentPlan
+          : "professional";
+  const [plan, setPlan] = useState(initialPlan);
+  const [period, setPeriod] = useState<"monthly" | "annual">(requestedPeriod === "annual" ? "annual" : "monthly");
   const [phone, setPhone] = useState("");
   const [gateway, setGateway] = useState<GatewayInfo | null>(null);
   const [gateways, setGateways] = useState<GatewayInfo[]>([]);

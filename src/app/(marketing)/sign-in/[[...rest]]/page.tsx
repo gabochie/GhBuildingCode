@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function SignInPage() {
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-4 px-4 py-16">
-      <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+      <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/dashboard" />
       <p className="text-xs text-muted-foreground">
         New to GHBC?{" "}
         <Link href="/register" className="font-medium text-primary hover:underline">Create a free account</Link>

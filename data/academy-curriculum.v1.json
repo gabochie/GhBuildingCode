@@ -1,0 +1,105 @@
+{
+  "$schema": "ghbc-academy-curriculum/v1",
+  "generatedFor": "ghbc.gabochie.com",
+  "source": "ghbc-corpus (GS 1207:2018)",
+  "certifications": [
+    {
+      "slug": "gs1207_core",
+      "title": "GS 1207 Core Proficiency",
+      "level": "Foundation",
+      "isFree": true,
+      "prerequisite": null,
+      "courses": [
+        {
+          "slug": "core-001",
+          "title": "How the Code Works",
+          "part": 1,
+          "lessons": [
+            { "slug": "core-001-l1", "title": "Scope, purpose & title", "section": "1.1" },
+            { "slug": "core-001-l2", "title": "Administration & enforcement", "section": "1.2" },
+            { "slug": "core-001-l3", "title": "Building safety & duties of Head of Works", "section": "1.3" },
+            { "slug": "core-001-l4", "title": "Permits & submissions", "section": "1.6" },
+            { "slug": "core-001-l5", "title": "Inspections & certificate of occupancy", "section": "1.12" },
+            { "slug": "core-001-l6", "title": "Demolition, temporary structures, fees", "section": "1.7" }
+          ]
+        },
+        {
+          "slug": "core-002",
+          "title": "Speaking the Code (Definitions)",
+          "part": 2,
+          "lessons": [
+            { "slug": "core-002-l1", "title": "How definitions control meaning", "section": "2.1.1" },
+            { "slug": "core-002-l2", "title": "Terms A-C", "section": "2.2" },
+            { "slug": "core-002-l3", "title": "Terms D-L", "section": "2.2" },
+            { "slug": "core-002-l4", "title": "Terms M-R", "section": "2.2" },
+            { "slug": "core-002-l5", "title": "Terms S-Z", "section": "2.2" }
+          ]
+        },
+        {
+          "slug": "core-003",
+          "title": "Classifying a Building (Occupancy)",
+          "part": 3,
+          "lessons": [
+            { "slug": "core-003-l1", "title": "Scope & classification rules", "section": "3.1" },
+            { "slug": "core-003-l2", "title": "Assembly Group A", "section": "3.3" },
+            { "slug": "core-003-l3", "title": "Business & Educational", "section": "3.4" },
+            { "slug": "core-003-l4", "title": "Factory & High-Hazard", "section": "3.6" },
+            { "slug": "core-003-l5", "title": "Institutional", "section": "3.8" },
+            { "slug": "core-003-l6", "title": "Mercantile, Residential, Storage, Utility", "section": "3.9" }
+          ]
+        }
+      ],
+      "exam": { "questions": 30, "minutes": null, "passPercent": 80 }
+    },
+    {
+      "slug": "compliance_professional",
+      "title": "Building Compliance Professional",
+      "level": "Professional",
+      "isFree": false,
+      "prerequisite": "gs1207_core",
+      "courses": [
+        { "slug": "pro-001", "title": "Special Detailed Requirements", "part": 4 },
+        { "slug": "pro-002", "title": "Site Development & Land Use", "part": 5 },
+        { "slug": "pro-003", "title": "Heights & Areas", "part": 6 },
+        { "slug": "pro-004", "title": "Types of Construction", "part": 7 },
+        { "slug": "pro-005", "title": "Fire & Smoke Protection Features", "part": 8 },
+        { "slug": "pro-006", "title": "Interior Finishes", "part": 9 },
+        { "slug": "pro-007", "title": "Fire Protection & Life Safety Systems", "part": 10 },
+        { "slug": "pro-008", "title": "Means of Escape", "part": 11 },
+        { "slug": "pro-009", "title": "Interior Environment", "part": 13 }
+      ],
+      "exam": { "questions": 50, "minutes": 60, "passPercent": 80 }
+    },
+    {
+      "slug": "permit_readiness",
+      "title": "Permit Readiness Certification",
+      "level": "Professional",
+      "isFree": false,
+      "prerequisite": "gs1207_core",
+      "courses": [
+        { "slug": "permit-001", "title": "Site Development & Land Use", "part": 5 },
+        { "slug": "permit-002", "title": "Heights & Areas", "part": 6 },
+        { "slug": "permit-003", "title": "Special Inspections & Tests", "part": 19 },
+        { "slug": "permit-004", "title": "Small Buildings", "part": 35 },
+        { "slug": "permit-005", "title": "Existing Buildings", "part": 36 }
+      ],
+      "exam": { "questions": 40, "minutes": 45, "passPercent": 80 }
+    },
+    {
+      "slug": "fire_egress",
+      "title": "Fire & Means-of-Egress Specialist",
+      "level": "Specialist",
+      "isFree": false,
+      "prerequisite": "gs1207_core",
+      "courses": [
+        { "slug": "fire-001", "title": "Types of Construction", "part": 7 },
+        { "slug": "fire-002", "title": "Fire & Smoke Protection Features", "part": 8 },
+        { "slug": "fire-003", "title": "Interior Finishes", "part": 9 },
+        { "slug": "fire-004", "title": "Fire Protection & Life Safety Systems", "part": 10 },
+        { "slug": "fire-005", "title": "Means of Escape", "part": 11 },
+        { "slug": "fire-006", "title": "Safeguards During Construction", "part": 34, "bonus": true }
+      ],
+      "exam": { "questions": 40, "minutes": 45, "passPercent": 85 }
+    }
+  ]
+}
