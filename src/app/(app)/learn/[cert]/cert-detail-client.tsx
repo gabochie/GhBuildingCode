@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { PageHeader } from "@/components/page-header";
 import { QuizRunner } from "@/components/academy-quiz";
-import { CheckCircle2, Circle, Loader2, PlayCircle, Award, Clock, ListChecks, Lock } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, PlayCircle, Award, Clock, ListChecks, Lock, ArrowRight } from "lucide-react";
 
 interface Lesson {
   id: string;
@@ -50,12 +50,14 @@ export function CertDetailClient({
   const router = useRouter();
   const [enrolling, setEnrolling] = useState(false);
   const [error, setError] = useState("");
+  const [needsUpgrade, setNeedsUpgrade] = useState(false);
   const [mode, setMode] = useState<null | "quiz" | "exam">(null);
 
   const totalLessons = courses.reduce((n, c) => n + c.lessons.length, 0);
   const done = completedIds.length;
   const pct = totalLessons ? Math.round((done / totalLessons) * 100) : 0;
-  const locked = !certification.is_free && !enrollment && !authenticated;
+  const paid = !certification.is_free;
+  const locked = paid && !enrollment && !authenticated;
 
   async function enroll() {
     if (!authenticated) {
@@ -64,6 +66,7 @@ export function CertDetailClient({
     }
     setEnrolling(true);
     setError("");
+    setNeedsUpgrade(false);
     try {
       const res = await fetch("/api/v1/academy/enroll", {
         method: "POST",
@@ -71,7 +74,12 @@ export function CertDetailClient({
         body: JSON.stringify({ certification_slug: certification.slug })
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.data?.error || "Could not enroll.");
+      if (!res.ok) {
+        // A paid track rejected for a free-plan user is not an error the user
+        // can act on by retrying — surface an upgrade path instead of a dead end.
+        if (res.status === 400 && paid) setNeedsUpgrade(true);
+        throw new Error(json?.data?.error || "Could not enroll.");
+      }
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not enroll.");
@@ -154,12 +162,32 @@ export function CertDetailClient({
             <p className="text-sm text-muted-foreground">
               {locked
                 ? "This is a paid certification track. Create an account and upgrade to enroll."
-                : "Enroll to track your progress and unlock the exam."}
+                : needsUpgrade
+                  ? "This is a paid certification track. Upgrade your plan to enroll and unlock the exam."
+                  : "Enroll to track your progress and unlock the exam."}
             </p>
-            <Button onClick={enroll} disabled={enrolling}>
-              {enrolling ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {authenticated ? "Enroll now" : "Create account to enroll"}
-            </Button>
+            {locked ? (
+              <Button asChild>
+                <Link href="/upgrade">
+                  Upgrade to enroll <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <Button onClick={enroll} disabled={enrolling}>
+                  {enrolling ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {authenticated ? "Enroll now" : "Create account to enroll"}
+                </Button>
+                {needsUpgrade && (
+                  <Link
+                    href="/upgrade"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    See plans and upgrade <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                )}
+              </div>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
         </Card>

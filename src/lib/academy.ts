@@ -76,16 +76,31 @@ export async function scoreAnswers(
   return { score, total: answers.length, results };
 }
 
-/** Fetch exam-eligible questions for a certification, deterministic-random. */
-export async function pickExamQuestions(certId: string, count: number) {
+/**
+ * Fetch questions for a certification, deterministic-random.
+ *
+ * Questions are keyed by their source `clause_id` (a clause can appear in
+ * lessons across more than one certification, so `lesson_id`/`course_id` are
+ * not authoritative). A question belongs to a certification when its clause
+ * appears in the `source_clauses_json` of any of that certification's lessons.
+ *
+ * @param examOnly when true, restrict to exam-eligible items (exam mode);
+ *   practice quizzes draw from the full set.
+ */
+export async function pickExamQuestions(certId: string, count: number, examOnly = true) {
   const db = await getDb();
   const rows = (await db
     .prepare(
       `SELECT q.id, q.prompt, q.options_json, q.kind, q.part_no, q.clause_id, q.page
          FROM academy_questions q
-         JOIN academy_lessons l ON l.id = q.lesson_id
-         JOIN academy_courses c ON c.id = l.course_id
-        WHERE c.certification_id = ? AND q.is_exam_eligible = 1
+        WHERE ${examOnly ? "q.is_exam_eligible = 1 AND " : ""}q.clause_id IS NOT NULL
+          AND EXISTS (
+                SELECT 1
+                  FROM academy_lessons l
+                  JOIN academy_courses c ON c.id = l.course_id
+                 WHERE c.certification_id = ?
+                   AND instr(l.source_clauses_json, '"' || q.clause_id || '"') > 0
+              )
         ORDER BY RANDOM() LIMIT ?`
     )
     .all(certId, count)) as {
@@ -98,18 +113,6 @@ export async function pickExamQuestions(certId: string, count: number) {
     page: number | null;
   }[];
 
-  // Fallback: questions not yet bound to a lesson but exam-eligible.
-  if (rows.length < count) {
-    const extra = (await db
-      .prepare(
-        `SELECT id, prompt, options_json, kind, part_no, clause_id, page
-           FROM academy_questions
-          WHERE is_exam_eligible = 1 AND lesson_id IS NULL
-          ORDER BY RANDOM() LIMIT ?`
-      )
-      .all(count - rows.length)) as typeof rows;
-    rows.push(...extra);
-  }
   return rows;
 }
 

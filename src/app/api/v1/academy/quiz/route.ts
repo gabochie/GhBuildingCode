@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     if (!cert) return notFound("Certification not found");
 
     const desired = mode === "exam" ? cert.exam_questions ?? count : count;
-    const rows = await pickExamQuestions(cert.id, desired);
+    const rows = await pickExamQuestions(cert.id, desired, mode === "exam");
 
     const questions = rows.map((q) => ({
       id: q.id,

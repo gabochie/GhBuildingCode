@@ -137,6 +137,20 @@ export function QuizRunner({
   const answered = Object.keys(choices).length;
   const total = questions?.length ?? 0;
 
+  if (total === 0) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <Button variant="ghost" size="sm" onClick={onExit}><ArrowLeft className="h-4 w-4" /> Back</Button>
+        <Card className="mt-6">
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No questions are available for this track yet. New questions are added from verified
+            extractions of the Code — please check back soon.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (grade) {
     const resultsById = new Map(grade.results.map((r) => [r.question_id, r]));
     return (
