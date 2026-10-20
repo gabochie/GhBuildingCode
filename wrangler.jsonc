@@ -41,6 +41,6 @@
 	"vars": {
 		"APP_URL": "https://ghbc.gabochie.com",
 		"NODE_ENV": "production",
-		"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "REPLACE_WITH_PK_LIVE"
+		"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuZ2Fib2NoaWUuY29tJA"
 	}
 }
