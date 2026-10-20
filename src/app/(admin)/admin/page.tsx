@@ -2,6 +2,7 @@ import { getDb } from "@/lib/db";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Table, THead, TR, TH, TD } from "@/components/ui";
 import { PlanEditor } from "./plan-editor";
+import { RoleEditor } from "./role-editor";
 import { planPrice } from "@/lib/billing/plans";
 
 export default async function AdminPage() {
@@ -170,7 +171,7 @@ export default async function AdminPage() {
         <CardContent>
           <Table>
             <THead>
-              <TR><TH>Name</TH><TH>Email</TH><TH>Role</TH><TH>Plan</TH><TH>Joined</TH><TH>Change plan</TH></TR>
+              <TR><TH>Name</TH><TH>Email</TH><TH>Role</TH><TH>Plan</TH><TH>Joined</TH><TH>Change role</TH><TH>Change plan</TH></TR>
             </THead>
             <tbody>
               {users.map((u) => (
@@ -180,6 +181,7 @@ export default async function AdminPage() {
                   <TD><Badge tone={u.role === "admin" ? "primary" : "default"}>{String(u.role)}</Badge></TD>
                   <TD><Badge tone={String(u.plan) === "free" ? "default" : "primary"}>{String(u.plan).toUpperCase()}</Badge></TD>
                   <TD className="text-xs text-muted-foreground">{String(u.created_at)}</TD>
+                  <TD><RoleEditor userId={String(u.id)} current={String(u.role)} /></TD>
                   <TD><PlanEditor userId={String(u.id)} current={String(u.plan)} /></TD>
                 </TR>
               ))}

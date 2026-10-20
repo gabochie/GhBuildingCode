@@ -30,7 +30,11 @@ export async function syncClerkUser(input: {
     | undefined;
   if (existing) return existing;
 
-  const role = input.role === "admin" ? "admin" : "user";
+  // Bootstrap the super admin: the configured GHBC_ADMIN_EMAIL always
+  // provisions as admin, so a fresh deployment is never locked out.
+  const bootstrapAdmin = (process.env.GHBC_ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const isBootstrapAdmin = bootstrapAdmin.length > 0 && input.email.trim().toLowerCase() === bootstrapAdmin;
+  const role = input.role === "admin" || isBootstrapAdmin ? "admin" : "user";
   const plan = input.plan?.toLowerCase() === "professional" || input.plan?.toLowerCase() === "studio" ? input.plan!.toLowerCase() : "free";
   await db
     .prepare(

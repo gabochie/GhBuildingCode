@@ -24,3 +24,4 @@ wrangler.json
 
 # generated at build time (see scripts/build-sw.mjs)
 public/sw.js
+tsconfig.tsbuildinfo

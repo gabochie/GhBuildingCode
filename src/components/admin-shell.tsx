@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { LayoutDashboard, Newspaper, Bot, ArrowLeft, LogOut, ShieldCheck, CreditCard } from "lucide-react";
+import { LayoutDashboard, Newspaper, Bot, ArrowLeft, LogOut, ShieldCheck, CreditCard, GraduationCap } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -12,7 +12,8 @@ const ADMIN_NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/blog", label: "Blog Manager", icon: Newspaper },
   { href: "/admin/content", label: "Content Pipeline", icon: Bot },
-  { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard }
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/academy", label: "Academy", icon: GraduationCap }
 ];
 
 export function AdminShell({

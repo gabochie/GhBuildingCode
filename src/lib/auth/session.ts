@@ -91,8 +91,11 @@ export async function getDbUser(session: SessionClaims) {
 
 /** Clerk is only active when its env keys are configured. */
 export function clerkConfigured(): boolean {
-  return Boolean(
-    process.env.CLERK_SECRET_KEY &&
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  );
+  const secret = process.env.CLERK_SECRET_KEY ?? "";
+  const publishable = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+  // Reject unset and unresolved placeholder values so a misconfigured deploy
+  // fails closed (no session) instead of activating Clerk with a bad key.
+  if (!secret || !publishable) return false;
+  if (secret.includes("REPLACE_WITH") || publishable.includes("REPLACE_WITH")) return false;
+  return true;
 }
