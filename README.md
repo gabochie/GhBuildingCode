@@ -1,11 +1,38 @@
 # GHBC — Ghana Building Compliance Intelligence
 
+**What it is:** a live web app that makes the Ghana Building Code (GS 1207:2018) searchable and actionable — explore the code, check a project against it, see what's missing, and track the documents an approving authority will expect. Every answer cites the source clause.
+
+🔗 **Live:** https://ghbc.gabochie.com
+
 Source-backed compliance intelligence for the Ghana Building Code (GS 1207:2018).
 Understand the requirements, check a project against them, find what's missing, and
 track the documents an approving authority will expect.
 
 > **Disclaimer:** GHBC output is interpretation and intelligence, not an official
 > determination, and not a substitute for professional advice or a building permit.
+
+## Screenshots
+
+| Home | Code explorer |
+| --- | --- |
+| ![Home](docs/screenshots/home.jpg) | ![Code explorer](docs/screenshots/code-explorer.jpg) |
+
+| Academy | Developer API |
+| --- | --- |
+| ![Academy](docs/screenshots/academy.jpg) | ![Developer API](docs/screenshots/developers.jpg) |
+
+_Live captures from https://ghbc.gabochie.com (see `scripts/capture-screenshots.mjs`)._
+
+## Pricing
+
+| Plan | Monthly | Annual (10 months billed, 2 free) | For |
+| --- | --- | --- | --- |
+| **Free** | GH₵0 | GH₵0 | Try GHBC — 1 project, 5 AI questions/mo, 3 checks/mo |
+| **Professional** | US$29 / GH₵399 | US$290 / GH₵3,990 | Architects & consultants — 10 projects, 100 AI questions/mo |
+| **Studio** | US$99 / GH₵1,299 | US$990 / GH₵12,990 | Practices — 50 projects, API access (3 keys) |
+| **Enterprise** | Custom | Custom | Developers, banks, insurers & government — SSO, audit logs, dedicated deployment |
+
+Paid plans include a **7-day money-back guarantee** for first-time subscribers (see [`/refund`](src/app/(marketing)/refund/page.tsx)). Prices in code: [`src/lib/billing/`](src/lib/billing/).
 
 ## Stack
 
