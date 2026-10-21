@@ -255,6 +255,9 @@ export function AppShell({
             <Link href="/privacy" className="hover:text-foreground hover:underline">
               Privacy
             </Link>
+            <Link href="/refund" className="hover:text-foreground hover:underline">
+              Refunds
+            </Link>
           </div>
         </footer>
       </div>

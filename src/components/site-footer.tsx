@@ -31,7 +31,8 @@ const COLUMNS: Array<{
     links: [
       { href: "/disclaimer", label: "Disclaimer" },
       { href: "/terms", label: "Terms of Use" },
-      { href: "/privacy", label: "Privacy Policy" }
+      { href: "/privacy", label: "Privacy Policy" },
+      { href: "/refund", label: "Refund Policy" }
     ]
   },
   {
